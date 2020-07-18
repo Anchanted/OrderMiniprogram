@@ -147,7 +147,6 @@ import { mapState } from "vuex"
                 })
 
                 uni.hideLoading()
-
             }
         },
 		mounted() {
