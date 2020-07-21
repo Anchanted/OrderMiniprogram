@@ -65,7 +65,7 @@ import { mapState } from "vuex"
         computed: {
             ...mapState({
                 weekdayList: state => state.weekdayList,
-                user: state => state.userInfo
+                user: state => state.user
             }),
             checkDate() {
                 return (i) => {
@@ -79,7 +79,7 @@ import { mapState } from "vuex"
             
         },
 		mounted() {
-            const userOrderList = orderInfo.filter(order => order.user === this.user.name)
+            const userOrderList = orderInfo.filter(order => order.user === this.user.username)
             userOrderList.forEach(order => {
                 order.courseList = order.courseList.map(course => {
                     let courseTypeObj = {}

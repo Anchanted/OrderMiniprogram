@@ -3,18 +3,18 @@
         <div class="user-info-container">
 			<image class="user-image" src="/static/image/user.png" mode="aspectFit"></image>
 			<div class="user-info">
-				<div class="user-info-name"><span>{{user.name}}</span></div>
-				<div class="user-info-secondary"><span class="user-info-second">{{user.second}}</span><span>{{user.third}}</span></div>
-				<div class="user-info-secondary"><span>{{user.phone}}</span></div>
+				<div class="user-info-name"><span>{{`${user.username} (${user.telephone})`}}</span></div>
+				<div class="user-info-secondary"><span>{{user.stationName}}</span></div>
+				<div class="user-info-secondary"><span>{{user.wellName}}</span></div>
 			</div>
 		</div>
 		<div class="option-list-container">
-			<div class="option-bar">
+			<div class="option-bar" @tap="onTapPassword">
 				<span>修改密码</span>
 				<span class="iconfont icon-left-arrow"></span>
 			</div>
 			<div class="option-bar" @tap="onTapUserOrder">
-				<span>查看我的历史订单</span>
+				<span>查看我的订单</span>
 				<span class="iconfont icon-left-arrow"></span>
 			</div>
 			<div class="option-bar" @tap="onTapDepartmentOrder">
@@ -39,13 +39,18 @@ import { mapState } from "vuex"
 		},
 		computed: {
 			...mapState({
-				user: state => state.userInfo
+				user: state => state.user
 			})
 		},
 		mounted() {
 
 		},
 		methods: {
+			onTapPassword() {
+				uni.navigateTo({
+                    url: '/pages/user/password'
+                });
+			},
 			onTapUserOrder() {
 				uni.navigateTo({
                     url: '/pages/order/user'
@@ -92,7 +97,7 @@ import { mapState } from "vuex"
 				margin-left: 20px;
 
 				.user-info-name {
-					font-size: 20px;
+					font-size: 18px;
 					font-weight: bold;
 					margin-bottom: 10px;
 				}
@@ -101,10 +106,6 @@ import { mapState } from "vuex"
 					margin-top: 4px;
 					color: #888888;
 					font-size: 14px;
-				}
-
-				.user-info-second {
-					margin-right: 10px;
 				}
 			}
 		}

@@ -2,9 +2,9 @@
 	<div class="order-confirm-page">
         <div class="user-info-container">
             <!-- <div>订餐人信息</div> -->
-            <div class="user-info-name"><span>{{user.name}}</span></div>
-            <div class="user-info-secondary"><span class="user-info-second">{{user.second}}</span><span>{{user.third}}</span></div>
-            <div class="user-info-secondary"><span>{{user.phone}}</span></div>
+            <div class="user-info-name"><span>{{`${user.username} (${user.telephone})`}}</span></div>
+            <div class="user-info-secondary"><span>{{user.stationName}}</span></div>
+            <div class="user-info-secondary"><span>{{user.wellName}}</span></div>
         </div>
         <div class="order-info-container">
             <div v-for="(dateObj, i) in dateOrderList" :key="i" class="order-info-date-container">
@@ -22,7 +22,7 @@
             <span>总计：</span><span>￥{{totalPrice}}</span>
         </div>
         <div class="notice">*订餐确认后，当天16:00前可取消，当天16:00后不可取消</div>
-        <div class="confirm-button">确认订单</div>
+        <button class="confirm-button" type="primary">确认订单</button>
     </div>
 </template>
 
@@ -39,7 +39,7 @@ import { mapState } from "vuex"
             ...mapState({
                 globalOrderList: state => state.orderList,
                 weekdayList: state => state.weekdayList,
-                user: state => state.userInfo
+                user: state => state.user
             }),
             totalPrice() {
                 return this.dateOrderList.reduce((acc, current) => acc += current.datePrice, 0)
@@ -120,10 +120,6 @@ import { mapState } from "vuex"
                 color: #888888;
                 font-size: 14px;
             }
-
-            .user-info-second {
-                margin-right: 10px;
-            }
         }
 
         .order-info-container {
@@ -159,21 +155,16 @@ import { mapState } from "vuex"
         }
 
         .notice {
-            height: 32px;
+            // height: 32px;
             font-size: 14px;
-            line-height: 32px;
+            line-height: 1.5;
             color: #E64340;
             background: transparent;
         }
 
         .confirm-button {
-            box-sizing: border-box;
-            height: 56px;
-            font-size: 18px;
-            line-height: 56px;
-            background: #09BB07;
-            color: #FFFFFF;
-            text-align: center;
+            margin-top: 10px;
+            width: 700rpx;
         }
     }
 </style>

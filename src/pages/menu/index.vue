@@ -67,7 +67,7 @@
                 </div>
                 <span v-if="hasOrder" class="cart-description-clear" @tap="onTapClear">清空</span>
             </div>
-            <div class="cart-order" :style="{ opacity: hasOrder ? 1 : 0.2 }" @tap="onTapOrder">确认</div>
+            <button class="cart-order" type="primary" size="mini" :disabled="!hasOrder" @tap="onTapOrder">确认</button>
         </div>
     </div>
 </template>
@@ -421,9 +421,8 @@ import { mapState } from "vuex"
             border-radius: 20px;
             font-size: 18px;
             line-height: 36px;
-            text-align: center;
-            background: #09BB07;
-            color: #FFFFFF;
+            padding: 0;
+            margin: 0;
         }
     }
 </style>

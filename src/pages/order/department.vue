@@ -12,9 +12,7 @@
                     <span class="end-date-weekday date-weekday">{{endDateWeekday}}</span>
                 </picker>
             </div>
-            <div class="date-search-button" @tap="onTapSearch">
-                查询
-            </div>
+            <button class="date-search-button" type="primary" @tap="onTapSearch">查询</button>
         </div>
 
         <div class="order-table-container">
@@ -206,16 +204,8 @@ import { mapState } from "vuex"
             }
 
             .date-search-button {
-                box-sizing: border-box;
                 margin-top: 10px;
-                width: 100%;
-                height: 44px;
-                font-size: 18px;
-                line-height: 44px;
-                border-radius: 10rpx;
-                background: #09BB07;
-                color: #FFFFFF;
-                text-align: center;
+                width: 700rpx;
             }
         }
 

@@ -27,7 +27,7 @@
 		{
 			"path": "pages/order/user",
 			"style": {
-				"navigationBarTitleText": "我的历史订单"
+				"navigationBarTitleText": "我的订单"
 			}
 		},
 		{
