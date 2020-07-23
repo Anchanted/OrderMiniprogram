@@ -78,15 +78,14 @@ import { mapState } from "vuex"
         },
         computed: {
             ...mapState({
-                weekdayList: state => state.weekdayList
             }),
             startDateWeekday() {
                 const date = new Date(this.startDate)
-                return this.weekdayList[(date.getDay() == 0 ? 7 : date.getDay()) - 1]
+                return this.getChineseWeekdayName(date)
             },
             endDateWeekday() {
                 const date = new Date(this.endDate)
-                return this.weekdayList[(date.getDay() == 0 ? 7 : date.getDay()) - 1]
+                return this.getChineseWeekdayName(date)
             },
         },
         methods: {

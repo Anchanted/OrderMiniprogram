@@ -64,14 +64,13 @@ import { mapState } from "vuex"
         },
         computed: {
             ...mapState({
-                weekdayList: state => state.weekdayList,
                 user: state => state.user
             }),
             checkDate() {
                 return (i) => {
                     const order = this.orderList[i]
                     const now = new Date()
-                    return `${now.getFullYear()}-${now.getMonth() + 1 < 10 ? "0" : ""}${now.getMonth() + 1}-${now.getDate() < 10 ? "0" : ""}${now.getDate()}` === order.date
+                    return this.getDateFormat(now) === order.date
                 }
             }
         },

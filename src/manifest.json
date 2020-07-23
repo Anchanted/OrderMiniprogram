@@ -71,19 +71,5 @@
     },
     "mp-qq" : {
         "usingComponents" : true
-	},
-	
-	"h5":{
-		"devServer": {
-            "port": 8096,
-            "disableHostCheck": true,
-            "proxy": {
-                "/dpc": {
-                    "target": "http://172.16.0.102",
-                    "changeOrigin": true,
-                    "secure": false
-                }
-            }
-        }
-	}
+    }
 }

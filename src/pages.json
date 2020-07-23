@@ -68,7 +68,7 @@
 				"selectedIconPath": "static/image/orderselected.png",
 				"text": "选餐"
 			}, {
-				"pagePath": "pages/login/index",
+				"pagePath": "pages/user/index",
 				"iconPath": "static/image/user.png",
 				"selectedIconPath": "static/image/userselected.png",
 				"text": "我的"
