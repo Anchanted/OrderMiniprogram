@@ -8,7 +8,7 @@
         </div>
         <div class="order-info-container">
             <div v-for="(dateObj, i) in dateOrderList" :key="i" class="order-info-date-container">
-                <div class="order-info-date-text"><div>{{dateObj.date}}</div></div>
+                <div class="order-info-date-text"><div>{{dateObj.dateText}}</div></div>
                 <div class="order-info-date-content">
                     <div v-for="(course, j) in dateObj.courseList" :key="j" class="order-info-date-course">
                         <span>{{course.name}}</span>
@@ -22,7 +22,7 @@
             <span>总计：</span><span>￥{{totalPrice}}</span>
         </div>
         <div class="notice">*订餐确认后，当天16:00前可取消，当天16:00后不可取消</div>
-        <button class="confirm-button" type="primary">确认订单</button>
+        <button class="confirm-button" type="primary" @tap="onTapConfirm">确认订单</button>
     </div>
 </template>
 
@@ -38,7 +38,6 @@ import { mapState } from "vuex"
         computed: {
             ...mapState({
                 globalOrderList: state => state.orderList,
-                weekdayList: state => state.weekdayList,
                 user: state => state.user
             }),
             totalPrice() {
@@ -46,7 +45,52 @@ import { mapState } from "vuex"
             }
         },
         methods: {
-            
+            onTapConfirm() {
+                this.dateOrderList.forEach(order => {
+                    const courseObj = {}
+                    courseObj["userId"] = this.user.id
+                    courseObj["dataTime"] = order.date + " 00:00:00"
+
+                    order.courseList.forEach(course => {
+                        let courseKey = ""
+                        if (course.mealType === 0) {
+                            courseKey += "morning"
+                            if (course.course === 0) courseKey += "A"
+                            else if (course.course === 1) courseKey += "B"
+                        } else if (course.mealType === 1) {
+                            courseKey += "noon"
+                            if (course.course === 0) courseKey += "A"
+                            else if (course.course === 1) courseKey += "B"
+
+                            if (course.size === 0) courseKey += "Max"
+                            else if (course.size === 1) courseKey += "Min"
+                        } else if (course.mealType === 2) {
+                            courseKey += "night"
+                            if (course.course === 0) courseKey += "A"
+                            else if (course.course === 1) courseKey += "B"
+                            
+                            if (course.size === 0) courseKey += "Max"
+                            else if (course.size === 1) courseKey += "Min"
+                        }
+                        courseObj[courseKey] = 1
+                    })
+
+                    console.log(courseObj)
+                    uni.request({
+                        url: this.apiUrl + "FoodData/Insert",
+                        method: "GET",
+                        // header: {
+                        //     "content-type": "application/x-www-form-urlencoded"
+                        // },
+                        data: courseObj
+                    }).then(res => {
+                        console.log(res)
+                        console.log(res.data)
+                    }).catch(err => {
+                        console.log(err)
+                    })
+                })
+            }
         },
 		mounted() {
             const courseList = JSON.parse(JSON.stringify(this.globalOrderList))
@@ -80,7 +124,8 @@ import { mapState } from "vuex"
             dateMap.forEach((value, key) => {
                 const weekdayDate = new Date(key)
                 this.dateOrderList.push({
-                    date: `${key} ${this.weekdayList[(weekdayDate.getDay() == 0 ? 7 : weekdayDate.getDay()) - 1]}`,
+                    date: key,
+                    dateText: `${key} ${this.getChineseWeekdayName(weekdayDate)}`,
                     courseList: value,
                     datePrice: value.reduce((acc, current) => acc += current.price, 0)
                 })

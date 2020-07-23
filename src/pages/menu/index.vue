@@ -1,5 +1,6 @@
 <template>
 	<div class="menu-container">
+        <div class="week-date">{{weekDateStr}}</div>
         <div class="navbar">
             <div v-for="(weekday, i) in weekdayList" :key="i" class="navbar-item-container">
                 <div class="navbar-item" :class="navbarActiveIndex === i ? 'navbar-item-active' : ''" :data-navbar-index="i" @tap="onNavBarTap">
@@ -20,10 +21,10 @@
                                 </div>
 
                                 <div class="meal-content-container">
-                                    <div v-for="(course, k) in menuList[i].mealList[j].courseList" :key="k" class="course-container">
+                                    <div v-for="(course, k) in menuList[i][j]" :key="k" class="course-container">
                                         <span class="course-title">{{course.name}}</span>
                                         <div class="course-content">
-                                            <span v-for="(dish, n) in course.meal" :key="n">{{dish}}</span>
+                                            <span v-for="(dish, n) in course.dishList" :key="n">{{dish}}</span>
                                         </div>
                                         <template>
                                             <div v-if="j === 0" class="course-select-area">
@@ -74,12 +75,14 @@
 
 <script>
 import menuInfo from "@/static/json/menu.json"
+import DateList from "@/static/json/weekday.json"
 
 import { mapState } from "vuex"
 
 	export default {
 		data() {
 			return {
+                weekDateStr: "",
 				navbarActiveIndex: 0,
                 mealTypeTitle: [
                     {
@@ -105,7 +108,6 @@ import { mapState } from "vuex"
         computed: {
             ...mapState({
                 globalMenuList: state => state.globalMenuList,
-                weekdayList: state => state.weekdayList
             }),
             hasOrder() {
                 return this.orderedCountList.reduce((acc, current) => acc += current, 0) > 0
@@ -192,31 +194,93 @@ import { mapState } from "vuex"
                 });
             }
         },
-        mounted() {
-            // menuInfo.forEach(weekday => {
-            //     weekday.menuList.forEach(meal => {
-            //         if (meal.mealType === "breakfast") {
-            //             this.breakfastList.push(meal.courseList)
-            //         } else if (meal.mealType === "lunch") {
-            //             this.lunchList.push(meal.courseList)
-            //         } else if (meal.mealType === "dinner") {
-            //             this.dinnerList.push(meal.courseList)
-            //         }
-            //     })
-            // })
-            const now = new Date()
-            const weekday = now.getDay() == 0 ? 7 : now.getDay()
-            const hour = now.getHours()
 
-            const monday = new Date(now.getTime() + (1 - weekday) * 24 * 3600 * 1000)
-            const sunday = new Date(now.getTime() + (7 - weekday) * 24 * 3600 * 1000)
+        created() {
+            const today = new Date()
+            const todayIndex = DateList.findIndex(day => this.getDateFormat(today) === day["dayStr"])
+            let selectedDay = today
+            if (todayIndex != null) {
+                if (DateList[todayIndex]["type"] == 0 && today.getHours() < 8) {
+                    selectedDay = today
+                } else {
+                    const nextDay = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
+                    if (nextDay) {
+                        selectedDay = new Date(nextDay["dayStr"])
+                    }
+                }
+            }
+            const weekday = selectedDay.getDay() == 0 ? 7 : selectedDay.getDay()
+            const hour = selectedDay.getHours()
 
-            uni.setNavigationBarTitle({
-                title: `选餐（${monday.getFullYear()}.${monday.getMonth() + 1}.${monday.getDate()} - ${sunday.getFullYear()}.${sunday.getMonth() + 1}.${sunday.getDate()}）`
+            const monday = new Date(selectedDay.getTime() + (1 - weekday) * 24 * 3600 * 1000)
+            const sunday = new Date(selectedDay.getTime() + (7 - weekday) * 24 * 3600 * 1000)
+
+            this.weekDateStr = `${this.getDateFormat(monday, 2)} - ${this.getDateFormat(sunday, 2)}`
+
+            uni.request({
+                url: this.apiUrl + "Food",
+                method: "GET",
+                data: {
+                    time: this.getDateFormat(selectedDay)
+                }
+            }).then(res => {
+                console.log(res)
+                const courseList = res[1].data.data
+
+                const dayMenuList = []
+
+                // Arrange response data
+                courseList.forEach(course => {
+                    const weekday = course.weekId
+                    while (dayMenuList.length < weekday) dayMenuList.push([])
+                    const mealType = Math.floor((course.typeId - 1) / 2) + 1
+                    while (dayMenuList[weekday - 1].length < mealType) dayMenuList[weekday - 1].push([])
+                    const courseIndex = (course.typeId - 1) % 2
+                    while (dayMenuList[weekday - 1][mealType - 1].length < courseIndex + 1) dayMenuList[weekday - 1][mealType - 1].push(null)
+                    
+                    const dishList = []
+                    for (let key in course) {
+                        if (key.match(/^food.*$/i)) {
+                            dishList.push(course[key].trim().replace(/[\r\n]/g, ""))
+                        }
+                    }
+                    
+                    dayMenuList[weekday - 1][mealType - 1][courseIndex] = {
+                        ...course,
+                        dishList,
+                        name: `套餐${String.fromCharCode("A".charCodeAt() + courseIndex)}`
+                    }
+                })
+                while (dayMenuList.length < 7) dayMenuList.push([])
+                console.log(dayMenuList)
+                this.$store.commit("setGlobalMenuList", dayMenuList)
+            }).catch(err => {
+                console.log(err)
             })
 
-            this.$store.commit("setGlobalMenuList", menuInfo)
-		},
+            uni.request({
+                url: this.apiUrl + "ulogin",
+                method: "POST",
+                header: {
+                    "content-type": "application/x-www-form-urlencoded"
+                },
+                data: {
+                    telephone: "13833759376",
+                    password: "010337"
+                }
+            }).then(res => {
+                console.log(res)
+                
+                this.$store.commit("setUser", res[1].data.data)
+            }).catch(err => {
+                console.log(err)
+            })
+        },
+        
+        mounted() {
+
+        },
+        
         watch: {
             globalMenuList: {
                 immediate: true,
@@ -234,6 +298,15 @@ import { mapState } from "vuex"
         display: flex;
         flex-direction: column;
         height: 100%;
+
+        .week-date {
+            width: 100%;
+            height: 30px;
+            line-height: 30px;
+            background: #FFFFFF;
+            text-align: center;
+            color: #A8A8A8;
+        }   
     }
 
     .navbar{
@@ -284,7 +357,7 @@ import { mapState } from "vuex"
     }
 
     .menu-content-wrapper{
-        height: calc(100% - 100px);
+        height: calc(100% - 130px);
         // margin-top: 50px;
 
         .menu-content-swiper {
