@@ -7,6 +7,13 @@
 			}
 		},
 		{
+			"path":"pages/login/index",
+			"style":{
+				"navigationBarTitleText":"登陆"
+			}
+
+		},
+		{
 			"path": "pages/user/index",
 			"style": {
 				"navigationBarTitleText": "我的"

@@ -306,7 +306,7 @@ import { mapState } from "vuex"
             background: #FFFFFF;
             text-align: center;
             color: #A8A8A8;
-        }   
+        }  
     }
 
     .navbar{
