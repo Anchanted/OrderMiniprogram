@@ -4,7 +4,7 @@
         <div class="navbar">
             <div v-for="(weekday, i) in weekdayList" :key="i" class="navbar-item-container">
                 <div class="navbar-item" :class="navbarActiveIndex === i ? 'navbar-item-active' : ''" :data-navbar-index="i" @tap="onNavBarTap">
-                    <span>{{weekday}}</span>
+                    <span :style="{ color: (i === (selectedDate.getDay() == 0 ? 7 : selectedDate.getDay()) - 1) ? 'red' : '' }">{{weekday}}</span>
                     <div v-if="orderedCountList[i] > 0" class="navbar-item-badge">{{orderedCountList[i]}}</div>
                 </div>
             </div>
@@ -13,7 +13,7 @@
             <swiper class="menu-content-swiper" :current="navbarActiveIndex" duration="200" circular="true" @change="onChangeSwiperItem">
                 <swiper-item v-for="(weekday, i) in weekdayList" :key="i" class="menu-content-swiper-item">
                     <scroll-view scroll-x="false" scroll-y="true" class="meal-content-container">
-                        <div v-if="menuList[i] != null" style="padding-bottom: 50px;">
+                        <div style="padding-bottom: 50px;">
                             <div v-for="(mealType, j) in mealTypeTitle" :key="j" class="meal-content-bar">
                                 <div class="meal-type-container">
                                     <span class="meal-type-name">{{mealType.name}}</span>
@@ -23,38 +23,41 @@
                                 <div class="meal-content-container">
                                     <div v-for="(course, k) in menuList[i][j]" :key="k" class="course-container">
                                         <span class="course-title">{{course.name}}</span>
-                                        <div class="course-content">
-                                            <span v-for="(dish, n) in course.dishList" :key="n">{{dish}}</span>
-                                        </div>
-                                        <template>
-                                            <div v-if="j === 0" class="course-select-area">
-                                                <div class="iconfont course-select-icon-container" @tap="onTapCourse($event, i, j, k)">
+                                        <div v-if="course.dishList.length" class="course-content">
+                                            <div class="course-dish">
+                                                <span v-for="(dish, n) in course.dishList" :key="n">{{dish}}</span>
+                                            </div>
+                                            <div v-if="course.display" class="course-select-area">
+                                                <div class="iconfont course-select-icon-container">
                                                     <span class="iconfont course-select-icon" 
                                                         :class="orderedMap.get(`${i}${j}`) === k * 2 ? 'icon-selected' : 'icon-select'"
-                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 ? '#09BB07' : '' }"></span>
+                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 ? '#09BB07' : '' }"
+                                                        @tap="onTapCourse($event, i, j, k, 0)"></span>
+                                                    <span v-if="j > 0">大</span>
+                                                    <span v-else style="width: 16px;"></span>
                                                 </div>
-                                            </div>
-                                            <div v-else class="course-select-area">
-                                                <div class="iconfont course-select-icon-container" @tap="onTapCourse($event, i, j, k, true)">
+                                                <div v-if="j > 0" class="iconfont course-select-icon-container">
                                                     <span class="iconfont course-select-icon" 
                                                         :class="orderedMap.get(`${i}${j}`) === k * 2 + 1 ? 'icon-selected' : 'icon-select'"
-                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 + 1 ? '#09BB07' : '' }"></span>
+                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 + 1 ? '#09BB07' : '' }"
+                                                        @tap="onTapCourse($event, i, j, k, 1)"></span>
                                                     <span>小</span>
                                                 </div>
-                                                <div class="iconfont course-select-icon-container" @tap="onTapCourse($event, i, j, k, false)">
-                                                    <span class="iconfont course-select-icon" 
-                                                        :class="orderedMap.get(`${i}${j}`) === k * 2 ? 'icon-selected' : 'icon-select'"
-                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 ? '#09BB07' : '' }"></span>
-                                                    <span>大</span>
-                                                </div>
                                             </div>
-                                        </template>
+                                            <div v-else-if="i === (selectedDate.getDay() == 0 ? 7 : selectedDate.getDay()) - 1" class="course-select-area">
+                                                <div v-if="selectedDateOrder[j][k] != null" class="iconfont course-select-icon-container">
+                                                    <span class="iconfont icon-selected course-select-icon" style="color: #888888;"></span>
+                                                    <span v-if="j > 0">大</span>
+                                                    <span v-else style="width: 16px;"></span>
+                                                </div>
+                                                <div v-else style="width: 100%; height: 50px;"></div>
+                                            </div>
+                                            <div v-else style="width: 100%; height: 50px;"></div>
+                                        </div>
+                                        <div v-else class="course-content-none">无</div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div v-else class="meal-content-nothing">
-                            <span>无</span>
                         </div>
                     </scroll-view>
                 </swiper-item>
@@ -74,7 +77,6 @@
 </template>
 
 <script>
-import menuInfo from "@/static/json/menu.json"
 import DateList from "@/static/json/weekday.json"
 
 import { mapState } from "vuex"
@@ -82,6 +84,7 @@ import { mapState } from "vuex"
 	export default {
 		data() {
 			return {
+                weekdayList: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
                 weekDateStr: "",
 				navbarActiveIndex: 0,
                 mealTypeTitle: [
@@ -98,7 +101,12 @@ import { mapState } from "vuex"
                         price: "大份15元\n小份14元"
                     }
                 ],
-                selectedWeekdayIndex: 0,
+                selectedDate: new Date(),
+                selectedDateOrder: [
+                    [null, null],
+                    [null, null],
+                    [null, null]
+                ],
                 orderedMap: new Map(),
                 orderedCountList: [0, 0, 0, 0, 0, 0, 0],
                 totalPrice: 0,
@@ -107,7 +115,7 @@ import { mapState } from "vuex"
         },
         computed: {
             ...mapState({
-                globalMenuList: state => state.globalMenuList,
+                user: state => state.user
             }),
             hasOrder() {
                 return this.orderedCountList.reduce((acc, current) => acc += current, 0) > 0
@@ -123,22 +131,18 @@ import { mapState } from "vuex"
                 this.navbarActiveIndex = detail.current
             },
 
-            onTapWeekday(event, index) {
-                this.selectedWeekdayIndex = index
-            },
-
-            onTapCourse(event, i, j, k, isSmall = false) {
+            onTapCourse(event, i, j, k, sizeIndex) {
                 if (this.orderedMap.get(`${i}${j}`) == null) {
-                    if (this.orderedMap.size < 3) this.orderedMap.set(`${i}${j}`, k * 2 + +isSmall)
+                    if (this.orderedMap.size < 3) this.orderedMap.set(`${i}${j}`, k * 2 + sizeIndex)
                     else {
                         uni.showToast({
-                            title: "最多只能点三种套餐",
                             icon: "none",
+                            title: "最多只能点三种套餐",
                             duration: 2000
                         });
                     }
-                } else if (this.orderedMap.get(`${i}${j}`) !== k * 2 + +isSmall) {
-                    this.orderedMap.set(`${i}${j}`, k * 2 + +isSmall)
+                } else if (this.orderedMap.get(`${i}${j}`) !== k * 2 + sizeIndex) {
+                    this.orderedMap.set(`${i}${j}`, k * 2 + sizeIndex)
                 } else {
                     this.orderedMap.delete(`${i}${j}`)
                 }
@@ -167,21 +171,22 @@ import { mapState } from "vuex"
                 this.updateOrder()
             },
 
-            onTapOrder() {
-                if (!this.hasOrder) return 
+            async onTapOrder() {
+                if (!this.hasOrder) return
+
                 const orderList = []
                 this.orderedMap.forEach((value, key) => {
                     const weekdayIndex = +key.charAt(0)
                     const mealTypeIndex = +key.charAt(1)
-                    const courseIndex = Math.floor(value / 2)
-                    const size = value - courseIndex * 2
+                    const courseTypeIndex = Math.floor(value / 2)
+                    const size = value - courseTypeIndex * 2
 
                     const courseObj = {
-                        ...this.menuList[weekdayIndex].mealList[mealTypeIndex].courseList[courseIndex].meal,
-                        date: this.menuList[weekdayIndex].date,
-                        weekday: weekdayIndex,
-                        mealType: mealTypeIndex,
-                        course: courseIndex,
+                        ...this.menuList[weekdayIndex][mealTypeIndex][courseTypeIndex],
+                        date: this.menuList[weekdayIndex][mealTypeIndex][courseTypeIndex].etime,
+                        weekday: weekdayIndex + 1,
+                        mealType: mealTypeIndex + 1,
+                        courseType: courseTypeIndex + 1,
                         size
                     }
                     orderList.push(courseObj)
@@ -190,53 +195,93 @@ import { mapState } from "vuex"
                 this.$store.commit("setOrderList", orderList)
 
                 uni.navigateTo({
-                    url: '/pages/menu/confirm'
+                    url: "/pages/menu/confirm"
                 });
-            }
+            },
         },
 
-        created() {
-            const today = new Date()
-            const todayIndex = DateList.findIndex(day => this.getDateFormat(today) === day["dayStr"])
-            let selectedDay = today
+        async onLoad() {
+            try {
+                const user = uni.getStorageSync("user")
+                console.log(user)
+				if (user) {
+					this.$store.commit("setUser", user)
+				} else {
+					uni.redirectTo({
+						url: "/pages/login/index"
+                    })
+                    return
+				}
+			} catch (err) {
+                // error
+                console.log(err)
+            } 
+
+            const now = new Date(this.nowDateStr)
+            uni.setNavigationBarTitle({
+                title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
+            })
+
+            const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
+            let selectedDate = now
             if (todayIndex != null) {
-                if (DateList[todayIndex]["type"] == 0 && today.getHours() < 8) {
-                    selectedDay = today
+                if (DateList[todayIndex]["type"] == 0 && now.getHours() < 8) {
+                    selectedDate = now
                 } else {
                     const nextDay = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
                     if (nextDay) {
-                        selectedDay = new Date(nextDay["dayStr"])
+                        selectedDate = new Date(`${nextDay["dayStr"]} ${now.pattern("HH:mm:ss")}`)
                     }
                 }
             }
-            const weekday = selectedDay.getDay() == 0 ? 7 : selectedDay.getDay()
-            const hour = selectedDay.getHours()
+            this.selectedDate = selectedDate
 
-            const monday = new Date(selectedDay.getTime() + (1 - weekday) * 24 * 3600 * 1000)
-            const sunday = new Date(selectedDay.getTime() + (7 - weekday) * 24 * 3600 * 1000)
+            const selectedWeekday = this.selectedDate.getDay() == 0 ? 7 : this.selectedDate.getDay()
+            const hour = this.selectedDate.getHours()
 
-            this.weekDateStr = `${this.getDateFormat(monday, 2)} - ${this.getDateFormat(sunday, 2)}`
+            this.navbarActiveIndex = selectedWeekday - 1
 
-            uni.request({
-                url: this.apiUrl + "Food",
-                method: "GET",
-                data: {
-                    time: this.getDateFormat(selectedDay)
+            const monday = new Date(this.selectedDate.getTime() + (1 - selectedWeekday) * 24 * 3600 * 1000)
+            const sunday = new Date(this.selectedDate.getTime() + (7 - selectedWeekday) * 24 * 3600 * 1000)
+
+            this.weekDateStr = `${monday.pattern("yyyy.MM.dd")} - ${sunday.pattern("yyyy.MM.dd")}`
+
+            const menuList = []
+            for (let i = 0; i < 7; i++) {
+                const weekday = []
+                for (let j = 0; j < 3; j++) {
+                    const mealType = []
+                    for (let k = 0; k < 2; k++) {
+                        const course = {
+                            name: `套餐${String.fromCharCode("A".charCodeAt() + k)}`,
+                            dishList: [],
+                            display: false
+                        }
+                        mealType.push(course)
+                    }
+                    weekday.push(mealType)
                 }
-            }).then(res => {
-                console.log(res)
-                const courseList = res[1].data.data
+                menuList.push(weekday)
+            }
+            this.menuList = menuList
 
-                const dayMenuList = []
+            try {
+                const data = await this.request({
+                    url: this.apiUrl + "/Food",
+                    method: "GET",
+                    data: {
+                        time: this.selectedDate.pattern("yyyy-MM-dd")
+                    }
+                })
+
+                console.log(data)
+                const courseList = data.data
 
                 // Arrange response data
                 courseList.forEach(course => {
                     const weekday = course.weekId
-                    while (dayMenuList.length < weekday) dayMenuList.push([])
                     const mealType = Math.floor((course.typeId - 1) / 2) + 1
-                    while (dayMenuList[weekday - 1].length < mealType) dayMenuList[weekday - 1].push([])
                     const courseIndex = (course.typeId - 1) % 2
-                    while (dayMenuList[weekday - 1][mealType - 1].length < courseIndex + 1) dayMenuList[weekday - 1][mealType - 1].push(null)
                     
                     const dishList = []
                     for (let key in course) {
@@ -245,50 +290,75 @@ import { mapState } from "vuex"
                         }
                     }
                     
-                    dayMenuList[weekday - 1][mealType - 1][courseIndex] = {
+                    menuList[weekday - 1][mealType - 1][courseIndex] = {
                         ...course,
+                        ...menuList[weekday - 1][mealType - 1][courseIndex],
                         dishList,
-                        name: `套餐${String.fromCharCode("A".charCodeAt() + courseIndex)}`
+                        // display: selectedWeekday == weekday && (hour >= 8 && hour < 16)
+                        display: false
                     }
                 })
-                while (dayMenuList.length < 7) dayMenuList.push([])
-                console.log(dayMenuList)
-                this.$store.commit("setGlobalMenuList", dayMenuList)
-            }).catch(err => {
-                console.log(err)
-            })
+                console.log(menuList)
+                this.menuList = JSON.parse(JSON.stringify(menuList))
 
-            uni.request({
-                url: this.apiUrl + "ulogin",
-                method: "POST",
-                header: {
-                    "content-type": "application/x-www-form-urlencoded"
-                },
-                data: {
-                    telephone: "13833759376",
-                    password: "010337"
-                }
-            }).then(res => {
-                console.log(res)
-                
-                this.$store.commit("setUser", res[1].data.data)
-            }).catch(err => {
-                console.log(err)
-            })
+                this.request({
+                    url: this.apiUrl + "/FoodData/ByUserId",
+                    method: "GET",
+                    data: {
+                        pageNum: 1,
+                        pageSize: 10,
+                        userId: this.user.id,
+                        timeStart: this.selectedDate.pattern("yyyy-MM-dd"),
+                        timeEnd: this.selectedDate.pattern("yyyy-MM-dd")
+                    }
+                }).then(data => {
+                    if (data.data.list.length) {
+                        const order = data.data.list[0]
+                        const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
+                        for (let key in order) {
+                            if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
+                                const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
+                                const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
+                                const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
+                                selectedDateOrder[mealType - 1][courseType - 1] = size
+                            }
+                        }
+                        this.selectedDateOrder = selectedDateOrder
+                        console.log(this.selectedDateOrder)
+                    } else {
+                        for (let j = 0; j < 3; j++) {
+                            for (let k = 0; k < 2; k++) {
+                                this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
+                            }
+                        }
+                    }
+                }).catch(err => {
+                    console.log(err)
+                    for (let j = 0; j < 3; j++) {
+                        for (let k = 0; k < 2; k++) {
+                            this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
+                        }
+                    }
+                })
+            } catch (error) {
+                console.log(error)
+                uni.showToast({
+                    icon: "none",
+                    title: "获取菜单失败，请重试",
+                    duration: 2000
+                });
+            }
         },
-        
-        mounted() {
 
+        onShow() {
+            // #ifdef MP-WEIXIN  
+            if(wx.hideHomeButton){  
+                wx.hideHomeButton();  
+            }  
+            // #endif
         },
         
         watch: {
-            globalMenuList: {
-                immediate: true,
-                deep: true,
-                handler: function(val) {
-                    this.menuList = val
-                }
-            }
         }
 	}
 </script>
@@ -344,7 +414,7 @@ import { mapState } from "vuex"
                     line-height: 14px;
                     position: absolute;
                     top: 2px;
-                    right: 5px;
+                    right: 0;
                 }
             }
         }
@@ -410,53 +480,61 @@ import { mapState } from "vuex"
                                 flex-direction: column;
                                 align-items: center;
                                 position: relative;
-                                padding-bottom: 50px;
                                 background: #FFFFFF;
+                                border: 1px solid #F5F5F5;
                                 // border-radius: 10px;
 
                                 .course-title {
                                     font-weight: bold;
                                     line-height: 2.5;
+                                    flex-shrink: 0;
                                 }
 
                                 .course-content {
+                                    width: 100%;
+                                    flex-grow: 1;
                                     display: flex;
                                     flex-direction: column;
+                                    justify-content: space-between;
                                     align-items: center;
-                                    line-height: 1.8;
-                                }
 
-                                .course-select-area {
-                                    box-sizing: border-box;
-                                    width: 100%;
-                                    height: auto;
-                                    position: absolute;
-                                    bottom: 0;
-                                    display: flex;
-
-                                    .course-select-icon-container {
-                                        flex-grow: 1;
+                                    .course-dish {
                                         display: flex;
-                                        justify-content: flex-end;
+                                        flex-direction: column;
                                         align-items: center;
-                                        padding: 0 10px 10px;
+                                        line-height: 1.8;
+                                    }
 
-                                        .course-select-icon {
-                                            margin-right: 2px;
+                                    .course-select-area {
+                                        box-sizing: border-box;
+                                        width: 100%;
+                                        height: auto;
+                                        display: flex;
+                                        flex-direction: row-reverse;
+
+                                        .course-select-icon-container {
+                                            flex-grow: 1;
+                                            display: flex;
+                                            justify-content: flex-end;
+                                            align-items: center;
+                                            padding: 15px 10px;
+
+                                            .course-select-icon {
+                                                margin-right: 2px;
+                                            }
                                         }
                                     }
+                                }
+
+                                .course-content-none {
+                                    width: 100%;
+                                    height: 190px;
+                                    line-height: 190px;
+                                    text-align: center;
                                 }
                             }
                         }
                     }   
-
-                    .meal-content-nothing {
-                        width: 100%;
-                        height: 100%;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                    }
                 }
             }
         }

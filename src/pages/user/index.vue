@@ -22,7 +22,7 @@
 				<span class="iconfont icon-left-arrow"></span>
 			</div>
 		</div>
-		<div class="logout-container">
+		<div class="logout-container" @tap="onTapLogout">
 			退出登录
 		</div>
 	</div>
@@ -42,9 +42,6 @@ import { mapState } from "vuex"
 				user: state => state.user
 			})
 		},
-		mounted() {
-
-		},
 		methods: {
 			onTapPassword() {
 				uni.navigateTo({
@@ -60,7 +57,20 @@ import { mapState } from "vuex"
 				uni.navigateTo({
                     url: '/pages/order/department'
                 });
+			},
+			onTapLogout() {
+				uni.clearStorageSync("user")
+				uni.reLaunch({
+                    url: '/pages/login/index'
+                });
 			}
+		},
+		onShow() {
+			// #ifdef MP-WEIXIN  
+			if(wx.hideHomeButton){  
+				wx.hideHomeButton();  
+			}  
+			// #endif
 		}
 	}
 </script>

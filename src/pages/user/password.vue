@@ -13,6 +13,7 @@
                 <input placeholder="请输入当前登录密码" placeholder-style="color: #888888" password="true" confirm-type="next" 
                     v-model="oldPassword" />
             </div>
+            <div v-if="!oldPassword" class="input-bar-error">未输入当前密码</div>
         </div>
 
         <div class="input-bar-wrapper">
@@ -29,11 +30,12 @@
                 <input placeholder="请再次输入新的登录密码" placeholder-style="color: #888888" password="true" confirm-type="done"
                     v-model="renewPassword" />
             </div>
+            <div v-if="renewPassword !== newPassword" class="input-bar-error">两次新密码输入不一致</div>
         </div>
 
-        <div class="restriction">新密码必须是12-20个英文字母（区分大小写）或数字</div>
+        <div class="restriction" :style="{ color: !!newPassword.match(/^[a-zA-Z0-9]{12,20}$/g) ? '' : '#FF0000' }">新密码必须是12-20个英文字母（区分大小写）或数字</div>
 
-        <button class="confirm-button" type="primary">提交</button>
+        <button class="confirm-button" type="primary" @tap="onTapSubmit">提交</button>
     </div>
 </template>
 
@@ -51,12 +53,31 @@ import { mapState } from "vuex"
         computed: {
             ...mapState({
                 user: state => state.user
-            }),
+            })
         },
         methods: {
-            
+            onTapSubmit() {
+                let errMsg = ""
+                if (!this.oldPassword) {
+                    errMsg = "未输入当前密码"
+                } else if (!this.newPassword.match(/^[a-zA-Z0-9]{12,20}$/g)) {
+                    errMsg = "新密码必须是12-20个英文字母（区分大小写）或数字"
+                } else if (this.renewPassword !== this.newPassword) {
+                    errMsg = "两次新密码输入不一致"
+                }
+                
+                if (errMsg) {
+                    uni.showToast({
+                        icon: "none",
+                        title: errMsg,
+                        duration: 2000
+                    })
+                } else {
+                    console.log("修改密码")
+                }
+            }
         },
-		mounted() {
+		onLoad() {
             
 		},
 	}
@@ -97,6 +118,13 @@ import { mapState } from "vuex"
                 input {
                     flex-grow: 1;
                 }
+            }
+
+            .input-bar-error {
+                width: 100%;
+                font-size: 14px;
+                color: #FF0000;
+                margin: 8px 0 0 20px;
             }
         }
 

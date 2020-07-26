@@ -4,12 +4,12 @@
             <div class="date-picker-container">
                 <picker mode="date" :value="date" :start="calendarStartDate" :end="calendarEndDate" @change="bindStartDateChange">
                     <span class="start-date-format">{{startDate}}</span>
-                    <span class="start-date-weekday date-weekday">{{startDateWeekday}}</span>
+                    <span class="start-date-weekday date-weekday">{{new Date(startDate).pattern("EE")}}</span>
                 </picker>
                 <span>至</span>
                 <picker mode="date" :value="date" :start="calendarStartDate" :end="calendarEndDate" @change="bindEndDateChange">
                     <span class="end-date-format">{{endDate}}</span>
-                    <span class="end-date-weekday date-weekday">{{endDateWeekday}}</span>
+                    <span class="end-date-weekday date-weekday">{{new Date(endDate).pattern("EE")}}</span>
                 </picker>
             </div>
             <button class="date-search-button" type="primary" @tap="onTapSearch">查询</button>
@@ -79,14 +79,6 @@ import { mapState } from "vuex"
         computed: {
             ...mapState({
             }),
-            startDateWeekday() {
-                const date = new Date(this.startDate)
-                return this.getChineseWeekdayName(date)
-            },
-            endDateWeekday() {
-                const date = new Date(this.endDate)
-                return this.getChineseWeekdayName(date)
-            },
         },
         methods: {
             bindStartDateChange(e) {
@@ -113,8 +105,8 @@ import { mapState } from "vuex"
             onTapSearch() {
                 if (this.startDate > this.endDate) {
                     uni.showToast({
-                        title: "起始日期不能晚于终止日期",
                         icon: "none",
+                        title: "起始日期不能晚于终止日期",
                         duration: 2000
                     });
                     return
