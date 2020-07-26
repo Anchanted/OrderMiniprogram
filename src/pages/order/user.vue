@@ -1,6 +1,6 @@
 <template>
     <scroll-view scroll-x="false" scroll-y="true" class="order-user-page">
-        <div class="order-list-container">
+        <div v-if="orderList.length" class="order-list-container">
             <div v-for="(order, i) in orderList" :key="i" class="order-container">
                 <div class="order-header">
                     <span class="order-date-text">{{order.date}}</span>
@@ -26,11 +26,14 @@
                 <div v-if="checkDate(i)" class="order-option"><div class="order-cancel-button">取消订单</div></div>
             </div>
         </div>
+        <div v-else class="order-none">
+            您还没有任何订单
+        </div>
     </scroll-view>
 </template>
 
 <script>
-import orderInfo from "@/static/json/order.json"
+import DateList from "@/static/json/weekday.json"
 
 import { mapState } from "vuex"
 
@@ -69,42 +72,77 @@ import { mapState } from "vuex"
             checkDate() {
                 return (i) => {
                     const order = this.orderList[i]
-                    const now = new Date()
-                    return this.getDateFormat(now) === order.date
+                    const now = new Date(this.nowDateStr)
+                    const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
+                    let selectedDate = now
+                    if (todayIndex != null) {
+                        if (DateList[todayIndex]["type"] == 0 && now.getHours() < 8) {
+                            selectedDate = now
+                        } else {
+                            const nextDay = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
+                            if (nextDay) {
+                                selectedDate = new Date(`${nextDay["dayStr"]} ${now.pattern("HH:mm:ss")}`)
+                            }
+                        }
+                    }
+                    return selectedDate.pattern("yyyy-MM-dd") === order.date && (selectedDate.getHours() >= 8 && selectedDate.getHours() < 16)
                 }
             }
         },
         methods: {
             
         },
-		mounted() {
-            const userOrderList = orderInfo.filter(order => order.user === this.user.username)
-            userOrderList.forEach(order => {
-                order.courseList = order.courseList.map(course => {
-                    let courseTypeObj = {}
-                    switch (course.mealType) {
-                        case 0:
-                            courseTypeObj = this.courseTypeList[0]
-                            break;
-                        case 1:
-                            courseTypeObj = this.courseTypeList[1 + course.size || 0]
-                            break;
-                        case 2:
-                            courseTypeObj = this.courseTypeList[3 + course.size || 0]
-                            break;
+		onLoad() {
+            uni.showLoading({
+                title: "加载中"
+            });
+
+            this.request({
+                url: this.apiUrl + "/FoodData/ByUserId",
+                method: "GET",
+                data: {
+                    pageNum: 1,
+                    pageSize: 10,
+                    userId: this.user.id,
+                    timeStart: new Date("2020-01-01").pattern("yyyy-MM-dd"),
+                    timeEnd: new Date().pattern("yyyy-MM-dd")
+                },
+            }).then(data => {
+                console.log(data)
+                uni.hideLoading();
+
+                const orderList = data.data.list.map(order => {
+                    const courseList = []
+                    for (let key in order) {
+                        if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
+                            const mealTypeStr = RegExp.$1.toLowerCase() === "morning" ? "早" : (RegExp.$1.toLowerCase() === "noon" ? "午" : "晚")
+                            const sizeStr = !RegExp.$3 ? "" : (RegExp.$3.toLowerCase() === "max" ? "(大份)" : "(小份)")
+                            const price = RegExp.$1.toLowerCase() === "morning" ? 5 : (15 - (RegExp.$3.toLowerCase() === "max" ? 0 : 1))
+                            courseList.push({
+                                name: `${mealTypeStr}餐 ${sizeStr}`,
+                                price
+                            })
+                        }
                     }
                     return {
-                        ...course,
-                        ...courseTypeObj
+                        courseList,
+                        date: new Date(order.dataTime).pattern("yyyy-MM-dd"),
+                        orderTime: new Date(order.stime).pattern("yyyy-MM-dd HH:mm:ss"),
+                        // cancelTime
                     }
                 })
+
+                orderList.sort((a, b) => new Date(b.date) - new Date(a.date))
+                this.orderList = orderList
+            }).catch(err => {
+                console.log(err)
+                uni.hideLoading();
+                uni.showToast({
+                    icon: "none",
+                    title: "获取信息失败",
+                    duration: 2000
+                })
             })
-            userOrderList.sort((a, b) => {
-                if (a.date < b.date) return 1
-                else if (a.date > b.date) return -1
-                else return 0
-            })
-            this.orderList = userOrderList
 		},
         watch: {
             
@@ -184,6 +222,14 @@ import { mapState } from "vuex"
                     }
                 }
             }
+        }
+
+        .order-none {
+            width: 100%;
+            height: 300px;
+            line-height: 300px;
+            text-align: center;
+            color: #888888;
         }
     }
 </style>

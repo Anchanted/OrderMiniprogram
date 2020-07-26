@@ -11,7 +11,6 @@
 			"style":{
 				"navigationBarTitleText":"登陆"
 			}
-
 		},
 		{
 			"path": "pages/user/index",

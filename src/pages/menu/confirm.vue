@@ -46,91 +46,134 @@ import { mapState } from "vuex"
         },
         methods: {
             onTapConfirm() {
-                this.dateOrderList.forEach(order => {
+                this.dateOrderList.forEach(async (order) => {
+                    uni.showLoading({
+                        title: "加载中"
+                    })
+                    try {
+                        const data = await this.request({
+                            url: this.apiUrl + "/FoodData/ByUserId",
+                            method: "GET",
+                            data: {
+                                pageNum: 1,
+                                pageSize: 10,
+                                userId: this.user.id,
+                                timeStart: order.date,
+                                timeEnd: order.date
+                            }
+                        })
+
+                        uni.hideLoading()
+                        if (data.data.list.length) {
+                            uni.showToast({
+                                icon: "none",
+                                title: "您已有本日订单",
+                                duration: 2000
+                            });
+
+                            return
+                        }
+                    } catch (error) {
+                        console.log(error)
+                        uni.hideLoading()
+                    }
+
                     const courseObj = {}
                     courseObj["userId"] = this.user.id
                     courseObj["dataTime"] = order.date + " 00:00:00"
 
                     order.courseList.forEach(course => {
                         let courseKey = ""
-                        if (course.mealType === 0) {
-                            courseKey += "morning"
-                            if (course.course === 0) courseKey += "A"
-                            else if (course.course === 1) courseKey += "B"
-                        } else if (course.mealType === 1) {
-                            courseKey += "noon"
-                            if (course.course === 0) courseKey += "A"
-                            else if (course.course === 1) courseKey += "B"
+                        if (course.mealType === 1) courseKey += "morning"
+                        else if (course.mealType === 2) courseKey += "noon"
+                        else if (course.mealType === 3) courseKey += "night"
 
-                            if (course.size === 0) courseKey += "Max"
-                            else if (course.size === 1) courseKey += "Min"
-                        } else if (course.mealType === 2) {
-                            courseKey += "night"
-                            if (course.course === 0) courseKey += "A"
-                            else if (course.course === 1) courseKey += "B"
-                            
+                        if (course.courseType === 1) courseKey += "A"
+                        else if (course.courseType === 2) courseKey += "B"
+
+                        if (course.mealType !== 1) {
                             if (course.size === 0) courseKey += "Max"
                             else if (course.size === 1) courseKey += "Min"
                         }
+
                         courseObj[courseKey] = 1
                     })
 
                     console.log(courseObj)
-                    uni.request({
-                        url: this.apiUrl + "FoodData/Insert",
+                    
+                    uni.showLoading({
+                        title: "加载中"
+                    });
+                    this.request({
+                        url: this.apiUrl + "/FoodData/Insert",
                         method: "GET",
-                        // header: {
-                        //     "content-type": "application/x-www-form-urlencoded"
-                        // },
-                        data: courseObj
-                    }).then(res => {
-                        console.log(res)
-                        console.log(res.data)
+                        data: courseObj,
+                    }).then(data => {
+                        console.log(data)
+                        uni.hideLoading();
+                        const result = data.data
+                        if (result) {
+                            uni.showToast({
+                                icon: "success",
+                                title: "订单提交成功",
+                                duration: 2000,
+                                complete: function() {
+                                    uni.reLaunch({
+                                        url: "/pages/menu/index"
+                                    })
+                                }
+                            })
+                        }
                     }).catch(err => {
                         console.log(err)
+                        uni.hideLoading();
+                        uni.showToast({
+                            icon: "none",
+                            title: "订单提交失败，请重试",
+                            duration: 2000
+                        })
                     })
                 })
             }
         },
-		mounted() {
+		onLoad() {
             const courseList = JSON.parse(JSON.stringify(this.globalOrderList))
             courseList.sort((order1, order2) => {
                 if (order1.date === order2.date) {
                     if (order1.mealType === order2.mealType) {
-                        if (order1.course === order2.course) {
+                        if (order1.courseType === order2.courseType) {
                             return order2.size - order1.size
                         } else
-                            return order1.course - order2.course
+                            return order1.courseType - order2.courseType
                     } else
                         return order1.mealType - order2.mealType
                 } else 
-                    return order1.date - order2.date
+                    return new Date(order1.date) - new Date(order2.date)
             })
 
             const dateMap = new Map()
             courseList.forEach(course => {
-                const mealTypeStr = course.mealType === 0 ? "早" : (course.mealType === 1 ? "午" : "晚")
-                const courseStr = String.fromCharCode(course.course + 'A'.charCodeAt()) 
-                const sizeStr = course.size ? "(小份)" : (course.mealType > 0 ? "(大份)" : "")
+                const mealTypeStr = course.mealType === 1 ? "早" : (course.mealType === 2 ? "午" : "晚")
+                const courseStr = String.fromCharCode(course.courseType - 1 + 'A'.charCodeAt()) 
+                const sizeStr = course.size ? "(小份)" : (course.mealType > 1 ? "(大份)" : "")
                 course = {
                     ...course,
                     name: `${mealTypeStr}餐 (套餐${courseStr}) ${sizeStr}`,
-                    price: course.mealType === 0 ? 5 : (course.size % 2 === 0 ? 15 : 14)
+                    price: course.mealType === 1 ? 5 : (course.size % 2 === 0 ? 15 : 14)
                 }
                 if (dateMap.get(`${course.date}`) == null) dateMap.set(`${course.date}`, [])
                 dateMap.get(`${course.date}`).push(course)
             })
             
             dateMap.forEach((value, key) => {
-                const weekdayDate = new Date(key)
+                const date = new Date(key)
                 this.dateOrderList.push({
                     date: key,
-                    dateText: `${key} ${this.getChineseWeekdayName(weekdayDate)}`,
+                    dateText: date.pattern("yyyy-MM-dd EE"),
                     courseList: value,
                     datePrice: value.reduce((acc, current) => acc += current.price, 0)
                 })
             })
-            console.log(dateMap)
 		},
 	}
 </script>

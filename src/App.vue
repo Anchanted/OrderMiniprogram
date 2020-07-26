@@ -5,6 +5,11 @@
 		},
 		onShow: function() {
 			console.log('App Show')
+			// #ifdef MP-WEIXIN  
+			if(wx.hideHomeButton){  
+				wx.hideHomeButton();  
+			}  
+			// #endif
 		},
 		onHide: function() {
 			console.log('App Hide')
