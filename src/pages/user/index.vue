@@ -17,7 +17,7 @@
 				<span>查看我的订单</span>
 				<span class="iconfont icon-left-arrow"></span>
 			</div>
-			<div class="option-bar" @tap="onTapDepartmentOrder">
+			<div class="option-bar" @tap="onTapDepartmentOrder" v-if="roleId==2">
 				<span>查看部门历史订单</span>
 				<span class="iconfont icon-left-arrow"></span>
 			</div>
@@ -34,13 +34,17 @@ import { mapState } from "vuex"
 	export default {
 		data() {
 			return {
-				title: 'Hello'
+				roleId: 2
 			}
 		},
 		computed: {
 			...mapState({
-				user: state => state.user
-			})
+				user: state => state.user,
+				
+			}),
+			getid(e){		
+				this.roleId = uni.getStorageSync('user').roleId
+			}
 		},
 		methods: {
 			onTapPassword() {

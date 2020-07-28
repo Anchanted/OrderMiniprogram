@@ -3,7 +3,7 @@
     <div class="bg" :style="{ backgroundImage: `url(${imageUrl})` }"></div>
     <div class="ig"><image style="width:70px;height:70px" src="/static/image/logo.jpg"></image>
     </div>
-    <div class="bt">移动点餐</div>
+    <div class="bt"><image style="width:210px;height:50px" src="/static/image/2.png"></image></div>
     <div class="form-item">
     <!-- <label>手机号：</label> -->
     <input class="inputText" type="text" placeholder="请输入手机号" v-model="telephone" />
@@ -56,9 +56,15 @@ export default {
                 }).then(data => {
                     console.log(data)
                     uni.setStorageSync("user", data.data)
-                    uni.reLaunch({
-                        url: "/pages/menu/index"
-                    })
+                    if(this.password.length<12)
+                    {uni.navigateTo({
+                        url: "/pages/user/password"
+                    })}
+                    else{
+                        uni.reLaunch({
+                            url:"/pages/menu/index"
+                        })
+                    }
                     // this.$store.commit("setUser", res[1].data.data)
                 }).catch(err => {
                     console.log(err)
@@ -93,15 +99,6 @@ export default {
         // #endif
     }
 }
-//         doJudge(){
-//             var xieyi=document.get("xieyi");
-//             if(!xieyi.checked){
-//                 alert("请先阅读并勾选注册协议！");
-//                 return;
-//             }
-            
-//         }
-//     },
 </script>
 
 
@@ -109,7 +106,7 @@ export default {
     .form-item { 
         position: relative;  
         margin: 0 auto; 
-        padding-bottom: 2px;
+        padding-bottom: 3px;
         display: flex;
         justify-content: center;
         font-family: 'Times New Roman';
@@ -157,7 +154,7 @@ export default {
         height:100%;
         background-size:cover;
         z-index:-1;
-        // opacity: 0.8;
+        opacity: 0.8;
         filter: blur(10px);
     }
     .ig{
@@ -176,10 +173,10 @@ export default {
         height: 37px;
     }
     .bt{
-        height: 40px;
+        // height: 40px;
         display: flex;
         justify-content: center;
-        font-size: 25px;
+        // font-size: 25px;
     }
     text{
         padding-top: 3px;

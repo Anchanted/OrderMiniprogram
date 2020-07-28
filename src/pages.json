@@ -3,7 +3,8 @@
 		{
 			"path": "pages/menu/index",
 			"style": {
-				"navigationBarTitleText": "选餐"
+				"navigationBarTitleText": "选餐",
+				"enablePullDownRefresh":true
 			}
 		},
 		{

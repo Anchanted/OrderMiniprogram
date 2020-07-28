@@ -3,7 +3,7 @@
         <div class="input-bar-wrapper">
             <div class="input-bar-header">账号</div>
             <div class="input-bar">
-                <input :placeholder="user.telephone" placeholder-style="color: #888888" disabled="true" />
+                <input :placeholder="user.telephone" placeholder-style="color: #888888" disabled="true"/>
             </div>
         </div>
 
@@ -58,10 +58,14 @@ import { mapState } from "vuex"
         methods: {
             onTapSubmit() {
                 let errMsg = ""
+                let pass = uni.getStorageSync("user")
                 if (!this.oldPassword) {
                     errMsg = "未输入当前密码"
-                } else if (!this.newPassword.match(/^[a-zA-Z0-9]{12,20}$/g)) {
+                } else if (this.oldPassword!=pass.password){
+                    errMsg = "当前登录密码输入错误"
+                }                else if (!this.newPassword.match(/^[a-zA-Z0-9]{12,20}$/g)) {
                     errMsg = "新密码必须是12-20个英文字母（区分大小写）或数字"
+                
                 } else if (this.renewPassword !== this.newPassword) {
                     errMsg = "两次新密码输入不一致"
                 }
@@ -72,9 +76,30 @@ import { mapState } from "vuex"
                         title: errMsg,
                         duration: 2000
                     })
-                } else {
+                }else {
                     console.log("修改密码")
-                }
+                    this.request({
+                        url: this.apiUrl + "/ulogin/Updata",
+                        method: "GET",
+                        header: {
+                            "content-type": "application/x-www-form-urlencoded"
+                        },
+                        data: {
+                            id:pass.id,
+                            password: this.newPassword
+                        }
+                    }).then(data => {
+                        console.log(data)
+                        uni.removeStorageSync("user")
+                        uni.reLaunch({
+                        url:"/pages/login/index"
+                }                  
+                    )
+                    }).catch(err => {
+                        console.log(err)
+                    })
+            }
+            
             }
         },
 		onLoad() {
