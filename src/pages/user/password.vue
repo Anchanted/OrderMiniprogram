@@ -72,8 +72,34 @@ import { mapState } from "vuex"
                         title: errMsg,
                         duration: 2000
                     })
+                    
+                    return
+                }
+
+                console.log("修改密码")
+
+                if (this.oldPassword !== this.user.password){
+                    errMsg = "当前登录密码输入错误"
                 } else {
-                    console.log("修改密码")
+                    this.request({
+                        url: this.apiUrl + "/ulogin/Updata",
+                        method: "GET",
+                        header: {
+                            "content-type": "application/x-www-form-urlencoded"
+                        },
+                        data: {
+                            id: this.user.id,
+                            password: this.newPassword
+                        }
+                    }).then(data => {
+                        console.log(data)
+                        uni.removeStorageSync("user")
+                        uni.reLaunch({
+                            url:"/pages/login/index"
+                        })
+                    }).catch(err => {
+                        console.log(err)
+                    })
                 }
             }
         },

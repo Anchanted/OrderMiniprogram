@@ -17,7 +17,7 @@
 				<span>查看我的订单</span>
 				<span class="iconfont icon-left-arrow"></span>
 			</div>
-			<div class="option-bar" @tap="onTapDepartmentOrder">
+			<div class="option-bar" @tap="onTapDepartmentOrder" v-if="user.roldId == 2">
 				<span>查看部门历史订单</span>
 				<span class="iconfont icon-left-arrow"></span>
 			</div>
@@ -34,12 +34,11 @@ import { mapState } from "vuex"
 	export default {
 		data() {
 			return {
-				title: 'Hello'
 			}
 		},
 		computed: {
 			...mapState({
-				user: state => state.user
+				user: state => state.user,
 			})
 		},
 		methods: {
