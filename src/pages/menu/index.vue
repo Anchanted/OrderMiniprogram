@@ -113,6 +113,19 @@ import { mapState } from "vuex"
                 menuList: []
 			}
         },
+        onLoad:function(options){
+            setTimeout(function () {
+            console.log('start pulldown');
+        },1000);
+            uni.startPullDownRefresh();
+        },
+        onPullDownRefresh(){
+            console.log('refresh');
+        setTimeout(function () {
+            uni.stopPullDownRefresh();
+        }, 1000);
+
+        },
         computed: {
             ...mapState({
                 user: state => state.user
@@ -217,7 +230,7 @@ import { mapState } from "vuex"
                 console.log(err)
             } 
 
-            const now = new Date(this.nowDateStr)
+            const now = new Date()
             uni.setNavigationBarTitle({
                 title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
             })
