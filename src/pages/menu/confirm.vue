@@ -52,7 +52,7 @@ import { mapState } from "vuex"
                     })
                     try {
                         const data = await this.request({
-                            url: this.apiUrl + "/FoodData/ByUserId",
+                            url: "/FoodData/ByUserId",
                             method: "GET",
                             data: {
                                 pageNum: 1,
@@ -63,18 +63,16 @@ import { mapState } from "vuex"
                             }
                         })
 
-                        uni.hideLoading()
                         if (data.data.list.length) {
                             uni.showToast({
                                 icon: "none",
                                 title: "您已有本日订单",
                                 duration: 2000
                             });
-
-                            return
                         }
                     } catch (error) {
                         console.log(error)
+                    } finally {
                         uni.hideLoading()
                     }
 
@@ -105,7 +103,7 @@ import { mapState } from "vuex"
                         title: "加载中"
                     });
                     this.request({
-                        url: this.apiUrl + "/FoodData/Insert",
+                        url: "/FoodData/Insert",
                         method: "GET",
                         data: courseObj,
                     }).then(data => {

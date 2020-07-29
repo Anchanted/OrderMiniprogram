@@ -1,22 +1,25 @@
 <template>
-    <div>
+    <div class="login-page">
         <div class="bg" :style="{ backgroundImage: `url(${imageUrl})` }"></div>
-            <div class="ig"><image style="width:70px;height:70px" src="/static/image/logo.jpg"></image>
-        </div>
-        <div class="bt"><image style="width:210px;height:50px" src="/static/image/2.png"></image></div>
+        <image class="logo" src="/static/image/logo.jpg"></image>
+        <image class="title" src="/static/image/2.png"></image>
+        <div class="error" v-if="hasError">用户名或密码错误</div>
         <div class="form-item">
             <!-- <label>手机号：</label> -->
-            <input class="inputText" type="text" placeholder="请输入手机号" v-model="telephone" />
+            <input class="inputText" type="text" placeholder="请输入手机号" v-model.trim="telephone" />
         </div>
         <div class="form-item">
             <!-- <label>密码：</label> -->
-            <input class="inputText" type="password" placeholder="请输入密码" v-model="password" />
+            <input class="inputText" type="password" placeholder="请输入密码" v-model.trim="password" />
         </div>
         <button class="butt" @click="login" id="btn" >登录</button>
         <div class="bbb">
             <div class="yh">
-                <checkbox color="#FFCC33" style="transform:scale(0.9)" value="xieyi" @click="yhxy" id="xieyi">用户协议</checkbox>
-                <text @click="wjmm">忘记密码</text>
+                <checkbox-group @change="onChangeCheckbox">
+                    <checkbox value="xieyi"></checkbox>
+                    <text class="agreement-text" @tap="yhxy">用户协议</text>
+                </checkbox-group>
+                <text class="forget-text" @tap="wjmm">忘记密码？</text>
             </div>
         </div>
         <!-- <button class="cancel_btn" @click="backLogin">{{backText}}</button> -->
@@ -32,7 +35,9 @@ export default {
         return {
             telephone: "",
             password: "",
-            imageUrl: "/static/image/bj.jpg"
+            imageUrl: "/static/image/bj.jpg",
+            agreementChecked: false,
+            hasError: false
         }
     },
 
@@ -44,9 +49,21 @@ export default {
                     title:'用户名或密码不能为空',
                     duration:2000,
                 })
+            } else if (!this.agreementChecked) {
+                uni.showToast({
+                    icon:'none',
+                    title:'请勾选用户协议',
+                    duration:2000,
+                })
             } else {
+                this.hasError = false
+
+                uni.showLoading({
+                    title: "加载中"
+                });
+
                 this.request({
-                    url: this.apiUrl + "/ulogin",
+                    url: "/ulogin",
                     method: "POST",
                     header: {
                         "content-type": "application/x-www-form-urlencoded"
@@ -57,19 +74,25 @@ export default {
                     }
                 }).then(data => {
                     console.log(data)
-                    uni.setStorageSync("user", data.data)
-                    if (this.password.length<12) {
-                        uni.navigateTo({
-                            url: "/pages/user/password"
-                        })
+                    uni.hideLoading()
+                    if (data.data) {
+                        uni.setStorageSync("user", data.data)
+                        this.$store.commit("setUser", data.data)
+                        if (this.password.length < 12) {
+                            uni.navigateTo({
+                                url: "/pages/user/password"
+                            })
+                        } else {
+                            uni.reLaunch({
+                                url: "/pages/menu/index"
+                            })
+                        }
                     } else {
-                        uni.reLaunch({
-                            url: "/pages/menu/index"
-                        })
+                        this.hasError = true
                     }
-                    // this.$store.commit("setUser", res[1].data.data)
                 }).catch(err => {
                     console.log(err)
+                    uni.hideLoading()
                 })
             }
 
@@ -82,7 +105,10 @@ export default {
                     console.log('用户点击确定');
                 }
             })
-		},
+        },
+        onChangeCheckbox({ detail }) {
+            this.agreementChecked = detail.value.length > 0
+        },
         yhxy() {
             uni.showModal({
                 title:'用户协议',
@@ -105,29 +131,58 @@ export default {
 
 
 <style lang="scss">
-    .form-item { 
-        position: relative;  
-        margin: 0 auto; 
-        padding-bottom: 3px;
+    .login-page {
+        width: 100%;
+        height: 100%;
         display: flex;
-        justify-content: center;
-        font-family: 'Times New Roman';
+        flex-direction: column;
+        align-items: center;
+
+        .logo {
+            width: 70px; 
+            height: 70px;
+            margin-top: 80px;
+        }
+
+        .title {
+            width:210px;
+            height:50px;
+            margin-top: 10px;
+        }
+
+        .error {
+            width: 250px;
+            height: 30px;
+            line-height: 30px;
+            color: #E64340;
+            margin-top: 10px;
+        }
     }
 
-    .form-item input { 
-        width: 250px; 
-        height: 40px; 
-        border: 1px solid #fff; 
-        border-radius: 25px;
-        font-size: 18px; 
-        background-color: #fff; 
-        outline: none;
+    .form-item { 
+        position: relative;  
+        padding-bottom: 3px;
+        margin-top: 10px;
         display: flex;
         justify-content: center;
+
+        input { 
+            width: 250px; 
+            height: 40px; 
+            border: 1px solid #fff; 
+            border-radius: 25px;
+            font-size: 18px; 
+            background-color: #fff; 
+            outline: none;
+            display: flex;
+            justify-content: center;
+        }
     }
+
     .butt { 
         width: 250px;
         height: 40px; 
+        margin-top: 10px;
         border: 0; 
         border-radius: 25px; 
         font-size: 18px; 
@@ -144,28 +199,29 @@ export default {
     .yh{
         width: 250px;
         // padding-left: 40px;
-        padding-top: 10px;
+        padding-top: 20px;
         display: flex;
         justify-content: space-between;
+
+        .agreement-text {
+            color: #09BB07;
+            text-decoration: underline;
+        }
+
+        .forget-text {
+            color: #FFFFFF;
+        }
     }
     .bg{
-        position:fixed;
-        top:0;
-        left:0;
-        width:100%;
-        height:100%;
-        background-size:cover;
-        z-index:-1;
-        opacity: 0.8;
-        filter: blur(10px);
-    }
-    .ig{
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
-        height: 150px;
-
-        display: flex;
-        justify-content: center;
-        align-items: flex-end;
+        height: 100%;
+        background-size: cover;
+        z-index: -1;
+        // opacity:  0.8;
+        filter:  blur(10px);
     }
 
     .ok_btn{
@@ -173,15 +229,5 @@ export default {
         margin: 0 auto;
         width:80%;
         height: 37px;
-    }
-    .bt{
-        // height: 40px;
-        display: flex;
-        justify-content: center;
-        // font-size: 25px;
-    }
-    text{
-        padding-top: 3px;
-        transform:scale(0.9);
     }
 </style>

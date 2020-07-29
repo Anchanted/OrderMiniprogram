@@ -17,7 +17,8 @@
 				<span>查看我的订单</span>
 				<span class="iconfont icon-left-arrow"></span>
 			</div>
-			<div class="option-bar" @tap="onTapDepartmentOrder" v-if="user.roldId == 2">
+			<!-- <div class="option-bar" @tap="onTapDepartmentOrder" v-if="user.roldId == 2"> -->
+			<div class="option-bar" @tap="onTapDepartmentOrder">
 				<span>查看部门历史订单</span>
 				<span class="iconfont icon-left-arrow"></span>
 			</div>

@@ -1,5 +1,5 @@
 <template>
-    <scroll-view scroll-x="false" scroll-y="true" class="order-user-page">
+    <view class="order-user-page">
         <div v-if="orderList.length" class="order-list-container">
             <div v-for="(order, i) in orderList" :key="i" class="order-container">
                 <div class="order-header">
@@ -8,11 +8,11 @@
                 </div>
                 <div class="order-course-container">
                     <div v-for="(course, j) in order.courseList" :key="j" class="order-course-list">
-                        <span>{{course.name}}</span>
+                        <span>{{course.name}} x{{course.count}}</span>
                         <span>￥{{course.price}}</span>
                     </div>
                 </div>
-                <div class="order-total-price"><span>总计：</span><span>￥{{order.courseList.reduce((acc, current) => acc += current.price, 0)}}</span></div>
+                <div class="order-total-price"><span>总计：</span><span>￥{{order.ncountMoney}}</span></div>
                 <div class="order-transaction-container">
                     <div v-if="order.orderTime">
                         <span>下单日期：</span>
@@ -23,13 +23,13 @@
                         <span>{{order.cancelTime}}</span>
                     </div>
                 </div>
-                <div v-if="checkDate(i)" class="order-option"><div class="order-cancel-button">取消订单</div></div>
+                <div v-if="checkDate(i) && !order.cancelTime" class="order-option"><div class="order-cancel-button" @tap="onTapCancelOrder($event, order.id)">取消订单</div></div>
             </div>
         </div>
         <div v-else class="order-none">
             您还没有任何订单
         </div>
-    </scroll-view>
+    </view>
 </template>
 
 <script>
@@ -90,15 +90,43 @@ import { mapState } from "vuex"
             }
         },
         methods: {
-            
+            onTapCancelOrder(e, id) {
+                uni.showLoading({
+                    title: "加载中"
+                });
+                this.request({
+                    url: "/FoodData/Updata",
+                    data: {
+                        id,
+                        mark: 1,
+                        remark: new Date().pattern("yyyy-MM-dd HH:mm:ss")
+                    }
+                }).then(data => {
+                    console.log(data)
+                    uni.hideLoading()
+                    uni.showToast({
+                        icon:'success',
+                        title:'订单取消成功',
+                        duration:2000,
+                    })
+                    uni.startPullDownRefresh()
+                }).catch(err => {
+                    console.log(err)
+                    uni.hideLoading()
+                    uni.showToast({
+                        icon:'none',
+                        title:'订单取消失败，请重试',
+                        duration:2000,
+                    })
+                })
+            }
         },
 		onLoad() {
-            uni.showLoading({
-                title: "加载中"
-            });
-
+            uni.startPullDownRefresh()
+        },
+        onPullDownRefresh() {
             this.request({
-                url: this.apiUrl + "/FoodData/ByUserId",
+                url: "/FoodData/ByUserId",
                 method: "GET",
                 data: {
                     pageNum: 1,
@@ -109,41 +137,52 @@ import { mapState } from "vuex"
                 },
             }).then(data => {
                 console.log(data)
-                uni.hideLoading();
+                uni.stopPullDownRefresh()
 
                 const orderList = data.data.list.map(order => {
                     const courseList = []
                     for (let key in order) {
                         if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
-                            const mealTypeStr = RegExp.$1.toLowerCase() === "morning" ? "早" : (RegExp.$1.toLowerCase() === "noon" ? "午" : "晚")
-                            const sizeStr = !RegExp.$3 ? "" : (RegExp.$3.toLowerCase() === "max" ? "(大份)" : "(小份)")
-                            const price = RegExp.$1.toLowerCase() === "morning" ? 5 : (15 - (RegExp.$3.toLowerCase() === "max" ? 0 : 1))
-                            courseList.push({
-                                name: `${mealTypeStr}餐 ${sizeStr}`,
-                                price
-                            })
+                            if (order[key]) {
+                                const mealTypeStr = RegExp.$1.toLowerCase() === "morning" ? "早" : (RegExp.$1.toLowerCase() === "noon" ? "午" : "晚")
+                                const sizeStr = !RegExp.$3 ? "" : (RegExp.$3.toLowerCase() === "max" ? "(大份)" : "(小份)")
+                                courseList.push({
+                                    name: `${mealTypeStr}餐 ${sizeStr}`,
+                                    mealType: RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3),
+                                    size: !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1),
+                                    count: order[key],
+                                    price: order[`${key}Money`]
+                                })
+                                courseList.sort((order1, order2) => {
+                                    if (order1.mealType === order2.mealType) {
+                                        return order2.size - order1.size
+                                    } else
+                                        return order1.mealType - order2.mealType
+                                })
+                            }
                         }
                     }
                     return {
+                        ...order,
                         courseList,
                         date: new Date(order.dataTime).pattern("yyyy-MM-dd"),
                         orderTime: new Date(order.stime).pattern("yyyy-MM-dd HH:mm:ss"),
-                        // cancelTime
+                        cancelTime: order.remark && new Date(order.remark).pattern("yyyy-MM-dd HH:mm:ss")
                     }
                 })
 
-                orderList.sort((a, b) => new Date(b.date) - new Date(a.date))
+                orderList.sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime))
                 this.orderList = orderList
             }).catch(err => {
                 console.log(err)
-                uni.hideLoading();
+                uni.stopPullDownRefresh()
                 uni.showToast({
                     icon: "none",
                     title: "获取信息失败",
                     duration: 2000
                 })
             })
-		},
+        },
         watch: {
             
         }
