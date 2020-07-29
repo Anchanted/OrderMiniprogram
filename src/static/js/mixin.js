@@ -1,7 +1,7 @@
 const mixin = {
     data() {
         return {
-            apiUrl: "http://119.88.168.130:18096",
+            apiUrl: "http://221.195.189.163:8096",
             nowDateStr: "2020-07-13 12:00:00"
         }
     },

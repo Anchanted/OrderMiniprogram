@@ -11,7 +11,7 @@
             <div class="input-bar-header">当前密码</div>
             <div class="input-bar">
                 <input placeholder="请输入当前登录密码" placeholder-style="color: #888888" password="true" confirm-type="next" 
-                    v-model.trim="oldPassword" />
+                    @input="onInputOldPassword" />
             </div>
             <div v-if="!oldPassword" class="input-bar-error">未输入当前密码</div>
         </div>
@@ -20,7 +20,7 @@
             <div class="input-bar-header">新密码</div>
             <div class="input-bar">
                 <input placeholder="请输入新的登录密码" placeholder-style="color: #888888" password="true" confirm-type="next"
-                    v-model.trim="newPassword" />
+                    @input="onInputNewPassword" />
             </div>
         </div>
 
@@ -28,7 +28,7 @@
             <div class="input-bar-header">确认新密码</div>
             <div class="input-bar">
                 <input placeholder="请再次输入新的登录密码" placeholder-style="color: #888888" password="true" confirm-type="done"
-                    v-model.trim="renewPassword" />
+                    @input="onInputRenewPassword" />
             </div>
             <div v-if="renewPassword !== newPassword" class="input-bar-error">两次新密码输入不一致</div>
         </div>
@@ -117,7 +117,16 @@ import { mapState } from "vuex"
                         })
                     })
                 }
-            }
+            },
+            onInputOldPassword({ detail }) {
+                this.oldPassword = detail.value
+            },
+            onInputNewPassword({ detail }) {
+                this.newPassword = detail.value
+            },
+            onInputRenewPassword({ detail }) {
+                this.renewPassword = detail.value
+            },
         },
 		onLoad() {
             
