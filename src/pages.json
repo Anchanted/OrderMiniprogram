@@ -4,7 +4,7 @@
 			"path": "pages/menu/index",
 			"style": {
 				"navigationBarTitleText": "选餐",
-				"enablePullDownRefresh":true
+				"enablePullDownRefresh": true
 			}
 		},
 		{
@@ -34,7 +34,8 @@
 		{
 			"path": "pages/order/user",
 			"style": {
-				"navigationBarTitleText": "我的订单"
+				"navigationBarTitleText": "我的订单",
+				"enablePullDownRefresh": true
 			}
 		},
 		{

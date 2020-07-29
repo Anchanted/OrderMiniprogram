@@ -3,7 +3,7 @@
         <div class="input-bar-wrapper">
             <div class="input-bar-header">账号</div>
             <div class="input-bar">
-                <input :placeholder="user.telephone" placeholder-style="color: #888888" disabled="true"/>
+                <input :placeholder="user.telephone" placeholder-style="color: #888888" disabled="true" />
             </div>
         </div>
 
@@ -11,7 +11,7 @@
             <div class="input-bar-header">当前密码</div>
             <div class="input-bar">
                 <input placeholder="请输入当前登录密码" placeholder-style="color: #888888" password="true" confirm-type="next" 
-                    v-model="oldPassword" />
+                    v-model.trim="oldPassword" />
             </div>
             <div v-if="!oldPassword" class="input-bar-error">未输入当前密码</div>
         </div>
@@ -20,7 +20,7 @@
             <div class="input-bar-header">新密码</div>
             <div class="input-bar">
                 <input placeholder="请输入新的登录密码" placeholder-style="color: #888888" password="true" confirm-type="next"
-                    v-model="newPassword" />
+                    v-model.trim="newPassword" />
             </div>
         </div>
 
@@ -28,7 +28,7 @@
             <div class="input-bar-header">确认新密码</div>
             <div class="input-bar">
                 <input placeholder="请再次输入新的登录密码" placeholder-style="color: #888888" password="true" confirm-type="done"
-                    v-model="renewPassword" />
+                    v-model.trim="renewPassword" />
             </div>
             <div v-if="renewPassword !== newPassword" class="input-bar-error">两次新密码输入不一致</div>
         </div>
@@ -58,16 +58,14 @@ import { mapState } from "vuex"
         methods: {
             onTapSubmit() {
                 let errMsg = ""
-                let pass = uni.getStorageSync("user")
                 if (!this.oldPassword) {
                     errMsg = "未输入当前密码"
-                } else if (this.oldPassword!=pass.password){
-                    errMsg = "当前登录密码输入错误"
-                }                else if (!this.newPassword.match(/^[a-zA-Z0-9]{12,20}$/g)) {
+                } else if (!this.newPassword.match(/^[a-zA-Z0-9]{12,20}$/g)) {
                     errMsg = "新密码必须是12-20个英文字母（区分大小写）或数字"
-                
                 } else if (this.renewPassword !== this.newPassword) {
                     errMsg = "两次新密码输入不一致"
+                } else if (this.oldPassword === this.newPassword) {
+                    errMsg = "新旧密码不能一致"
                 }
                 
                 if (errMsg) {
@@ -76,30 +74,49 @@ import { mapState } from "vuex"
                         title: errMsg,
                         duration: 2000
                     })
-                }else {
-                    console.log("修改密码")
+                    return
+                }
+
+                console.log("修改密码")
+                uni.showLoading({
+                    title: "加载中"
+                });
+                if (this.oldPassword !== this.user.password) {
+                    uni.hideLoading()
+                    uni.showToast({
+                        icon: "none",
+                        title: "当前登录密码输入错误",
+                        duration: 2000
+                    })
+                    return
+                } else {
                     this.request({
-                        url: this.apiUrl + "/ulogin/Updata",
+                        url: "/ulogin/Updata",
                         method: "GET",
                         header: {
                             "content-type": "application/x-www-form-urlencoded"
                         },
                         data: {
-                            id:pass.id,
+                            id: this.user.id,
                             password: this.newPassword
                         }
                     }).then(data => {
                         console.log(data)
+                        uni.hideLoading()
                         uni.removeStorageSync("user")
                         uni.reLaunch({
-                        url:"/pages/login/index"
-                }                  
-                    )
+                            url:"/pages/login/index"
+                        })
                     }).catch(err => {
                         console.log(err)
+                        uni.hideLoading()
+                        uni.showToast({
+                            icon: "none",
+                            title: err,
+                            duration: 2000
+                        })
                     })
-            }
-            
+                }
             }
         },
 		onLoad() {

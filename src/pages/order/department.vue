@@ -23,11 +23,11 @@
                 <template v-for="(course, index) in courseList">
                     <div :key="index">{{course.name}}</div>
                     <div :key="index">{{course.count}}</div>
-                    <div :key="index">{{course.count * course.price}}</div>
+                    <div :key="index">{{course.price}}</div>
                 </template>
                 <div>总计</div>
                 <div>{{courseList.reduce((acc, current) => acc += current.count, 0)}}</div>
-                <div>{{courseList.reduce((acc, current) => acc += (current.count * current.price), 0)}}</div>
+                <div>{{courseList.reduce((acc, current) => acc += current.price, 0)}}</div>
             </div>
         </div>
     </div>
@@ -46,38 +46,12 @@ import { mapState } from "vuex"
                 calendarStartDate: "2020-01-01",
                 calendarEndDate: "2021-01-01",
                 department: "公司办公室",
-                orderList: [],
-                courseList: [
-                    {
-                        name: "早餐",
-                        count: 0,
-                        price: 5
-                    },
-                    {
-                        name: "午餐(大份)",
-                        count: 0,
-                        price: 15
-                    },
-                    {
-                        name: "午餐(小份)",
-                        count: 0,
-                        price: 14
-                    },
-                    {
-                        name: "晚餐(大份)",
-                        count: 0,
-                        price: 15
-                    },
-                    {
-                        name: "晚餐(小份)",
-                        count: 0,
-                        price: 14
-                    },
-                ]
+                courseList: []
 			}
         },
         computed: {
             ...mapState({
+                user: state => state.user
             }),
         },
         methods: {
@@ -88,7 +62,7 @@ import { mapState } from "vuex"
                 this.endDate = e.target.value
             },
             getDate(type) {
-                const date = new Date();
+                const date = new Date(this.nowDateStr);
                 let year = date.getFullYear();
                 let month = date.getMonth() + 1;
                 let day = date.getDate();
@@ -102,7 +76,7 @@ import { mapState } from "vuex"
                 day = day > 9 ? day : '0' + day;
                 return `${year}-${month}-${day}`;
             },
-            onTapSearch() {
+            async onTapSearch() {
                 if (this.startDate > this.endDate) {
                     uni.showToast({
                         icon: "none",
@@ -112,35 +86,96 @@ import { mapState } from "vuex"
                     return
                 }
 
+                const courseList = [
+                    {
+                        name: "早餐",
+                        count: 0,
+                        price: 0
+                    },
+                    {
+                        name: "午餐(大份)",
+                        count: 0,
+                        price: 0
+                    },
+                    {
+                        name: "午餐(小份)",
+                        count: 0,
+                        price: 0
+                    },
+                    {
+                        name: "晚餐(大份)",
+                        count: 0,
+                        price: 0
+                    },
+                    {
+                        name: "晚餐(小份)",
+                        count: 0,
+                        price: 0
+                    }
+                ]
+
                 uni.showLoading({
                     title: '加载中'
                 });
 
-                this.courseList.forEach(course => course.count = 0)
-                let courseList = []
-                this.orderList.filter(order => order.date >= this.startDate && order.date <= this.endDate)
-                    .forEach(order => courseList = courseList.concat(order.courseList))
+                try {
+                    const data = await this.request({
+                        url: "/StationFoodData/ByStationId",
+                        data: {
+                            stationId: this.user.stationId,
+                            timeStart: this.startDate,
+                            timeEnd: this.endDate
+                        }
+                    })
+                    console.log(data)
 
-                courseList.forEach(course => {
-                    switch (course.mealType) {
-                        case 0:
-                            this.courseList[0].count += 1
-                            break;
-                        case 1:
-                            this.courseList[1 + course.size || 0].count += 1
-                            break;
-                        case 2:
-                            this.courseList[3 + course.size || 0].count += 1
-                            break;
+                    const orderDayList = data.data
+                    if (orderDayList) {
+                        orderDayList.forEach(order => {
+                            for (let key in order) {
+                                let courseIndex = -1
+                                switch (key) {
+                                    case "morning":
+                                        courseIndex = 0
+                                        break;
+                                    case "noonMax":
+                                        courseIndex = 1
+                                        break;
+                                    case "noonMin":
+                                        courseIndex = 2
+                                        break;
+                                    case "nightMax":
+                                        courseIndex = 3
+                                        break;
+                                    case "nightMin":
+                                        courseIndex = 4
+                                        break;
+                                    default:
+                                        courseIndex = -1
+                                        break;
+                                }
+
+                                if (courseIndex > -1) {
+                                    courseList[courseIndex].count += order[key]
+                                    courseList[courseIndex].price += order[`${key}Money`]
+                                }
+                            }
+                        })
                     }
-                })
-
-                uni.hideLoading()
+                } catch (error) {
+                    console.log(error)
+                    uni.showToast({
+                        icon:'none',
+                        title:'数据加载失败，请重试',
+                        duration:2000,
+                    })
+                } finally {
+                    this.courseList = courseList
+                    uni.hideLoading()
+                }
             }
         },
-		mounted() {
-            this.orderList = orderInfo
-            
+		onLoad() {
             this.startDate = this.getDate()
             this.endDate = this.getDate()
 

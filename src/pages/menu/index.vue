@@ -12,7 +12,8 @@
         <div class="menu-content-wrapper">
             <swiper class="menu-content-swiper" :current="navbarActiveIndex" duration="200" circular="true" @change="onChangeSwiperItem">
                 <swiper-item v-for="(weekday, i) in weekdayList" :key="i" class="menu-content-swiper-item">
-                    <scroll-view scroll-x="false" scroll-y="true" class="meal-content-container">
+                    <scroll-view class="meal-content-container"
+                        scroll-x="false" scroll-y="true">
                         <div style="padding-bottom: 50px;">
                             <div v-for="(mealType, j) in mealTypeTitle" :key="j" class="meal-content-bar">
                                 <div class="meal-type-container">
@@ -47,7 +48,7 @@
                                             <div v-else-if="i === (selectedDate.getDay() == 0 ? 7 : selectedDate.getDay()) - 1" class="course-select-area">
                                                 <div v-if="selectedDateOrder[j][k] != null" class="iconfont course-select-icon-container">
                                                     <span class="iconfont icon-selected course-select-icon" style="color: #888888;"></span>
-                                                    <span v-if="j > 0">大</span>
+                                                    <span v-if="j > 0">{{selectedDateOrder[j][k] ? "小" : "大"}}</span>
                                                     <span v-else style="width: 16px;"></span>
                                                 </div>
                                                 <div v-else style="width: 100%; height: 50px;"></div>
@@ -101,7 +102,7 @@ import { mapState } from "vuex"
                         price: "大份15元\n小份14元"
                     }
                 ],
-                selectedDate: new Date(),
+                selectedDate: new Date(this.nowDateStr),
                 selectedDateOrder: [
                     [null, null],
                     [null, null],
@@ -112,19 +113,6 @@ import { mapState } from "vuex"
                 totalPrice: 0,
                 menuList: []
 			}
-        },
-        onLoad:function(options){
-            setTimeout(function () {
-            console.log('start pulldown');
-        },1000);
-            uni.startPullDownRefresh();
-        },
-        onPullDownRefresh(){
-            console.log('refresh');
-        setTimeout(function () {
-            uni.stopPullDownRefresh();
-        }, 1000);
-
         },
         computed: {
             ...mapState({
@@ -213,24 +201,8 @@ import { mapState } from "vuex"
             },
         },
 
-        async onLoad() {
-            try {
-                const user = uni.getStorageSync("user")
-                console.log(user)
-				if (user) {
-					this.$store.commit("setUser", user)
-				} else {
-					uni.redirectTo({
-						url: "/pages/login/index"
-                    })
-                    return
-				}
-			} catch (err) {
-                // error
-                console.log(err)
-            } 
-
-            const now = new Date()
+        async onPullDownRefresh(){
+            const now = new Date(this.nowDateStr)
             uni.setNavigationBarTitle({
                 title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
             })
@@ -280,12 +252,14 @@ import { mapState } from "vuex"
 
             try {
                 const data = await this.request({
-                    url: this.apiUrl + "/Food",
+                    url: "/Food",
                     method: "GET",
                     data: {
                         time: this.selectedDate.pattern("yyyy-MM-dd")
                     }
                 })
+
+                uni.stopPullDownRefresh()
 
                 console.log(data)
                 const courseList = data.data
@@ -315,7 +289,7 @@ import { mapState } from "vuex"
                 this.menuList = JSON.parse(JSON.stringify(menuList))
 
                 this.request({
-                    url: this.apiUrl + "/FoodData/ByUserId",
+                    url: "/FoodData/ByUserId",
                     method: "GET",
                     data: {
                         pageNum: 1,
@@ -325,15 +299,18 @@ import { mapState } from "vuex"
                         timeEnd: this.selectedDate.pattern("yyyy-MM-dd")
                     }
                 }).then(data => {
-                    if (data.data.list.length) {
-                        const order = data.data.list[0]
+                    console.log(data)
+                    const order = data.data.list.find(order => !order.mark)
+                    if (order) {
                         const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
                         for (let key in order) {
                             if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
-                                const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
-                                const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
-                                const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
-                                selectedDateOrder[mealType - 1][courseType - 1] = size
+                                if (order[key]) {
+                                    const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
+                                    const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
+                                    const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
+                                    selectedDateOrder[mealType - 1][courseType - 1] = size
+                                }
                             }
                         }
                         this.selectedDateOrder = selectedDateOrder
@@ -355,12 +332,33 @@ import { mapState } from "vuex"
                 })
             } catch (error) {
                 console.log(error)
+                uni.stopPullDownRefresh()
                 uni.showToast({
                     icon: "none",
                     title: "获取菜单失败，请重试",
                     duration: 2000
                 });
             }
+        },
+
+        onLoad() {
+            try {
+                const user = uni.getStorageSync("user")
+                console.log(user)
+				if (user) {
+					this.$store.commit("setUser", user)
+				} else {
+					uni.redirectTo({
+						url: "/pages/login/index"
+                    })
+                    return
+				}
+			} catch (err) {
+                // error
+                console.log(err)
+            } 
+
+            uni.startPullDownRefresh()
         },
 
         onShow() {
