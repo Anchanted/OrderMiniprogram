@@ -29,19 +29,17 @@
                                                 <span v-for="(dish, n) in course.dishList" :key="n">{{dish}}</span>
                                             </div>
                                             <div v-if="course.display" class="course-select-area">
-                                                <div class="iconfont course-select-icon-container">
+                                                <div class="iconfont course-select-icon-container" @tap="onTapCourse($event, i, j, k, 0)">
                                                     <span class="iconfont course-select-icon" 
                                                         :class="orderedMap.get(`${i}${j}`) === k * 2 ? 'icon-selected' : 'icon-select'"
-                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 ? '#09BB07' : '' }"
-                                                        @tap="onTapCourse($event, i, j, k, 0)"></span>
+                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 ? '#09BB07' : '' }"></span>
                                                     <span v-if="j > 0">大</span>
                                                     <span v-else style="width: 16px;"></span>
                                                 </div>
-                                                <div v-if="j > 0" class="iconfont course-select-icon-container">
+                                                <div v-if="j > 0" class="iconfont course-select-icon-container" @tap="onTapCourse($event, i, j, k, 1)">
                                                     <span class="iconfont course-select-icon" 
                                                         :class="orderedMap.get(`${i}${j}`) === k * 2 + 1 ? 'icon-selected' : 'icon-select'"
-                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 + 1 ? '#09BB07' : '' }"
-                                                        @tap="onTapCourse($event, i, j, k, 1)"></span>
+                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 + 1 ? '#09BB07' : '' }"></span>
                                                     <span>小</span>
                                                 </div>
                                             </div>
@@ -102,7 +100,8 @@ import { mapState } from "vuex"
                         price: "大份15元\n小份14元"
                     }
                 ],
-                selectedDate: new Date(this.nowDateStr),
+                // selectedDate: new Date(this.nowDateStr),
+                selectedDate: new Date(),
                 selectedDateOrder: [
                     [null, null],
                     [null, null],
@@ -147,7 +146,7 @@ import { mapState } from "vuex"
                 } else {
                     this.orderedMap.delete(`${i}${j}`)
                 }
-                console.log(this.orderedMap)
+                // console.log(this.orderedMap)
 
                 this.updateOrder()
             },
@@ -201,11 +200,16 @@ import { mapState } from "vuex"
             },
         },
 
-        async onPullDownRefresh(){
-            const now = new Date(this.nowDateStr)
-            uni.setNavigationBarTitle({
-                title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
-            })
+        async onPullDownRefresh() {
+            this.orderedMap = new Map()
+            this.orderedCountList = [0, 0, 0, 0, 0, 0, 0]
+            this.totalPrice = 0
+
+            // const now = new Date(this.nowDateStr)
+            const now = new Date()
+            // uni.setNavigationBarTitle({
+            //     title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
+            // })
 
             const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
             let selectedDate = now
@@ -229,7 +233,7 @@ import { mapState } from "vuex"
             const monday = new Date(this.selectedDate.getTime() + (1 - selectedWeekday) * 24 * 3600 * 1000)
             const sunday = new Date(this.selectedDate.getTime() + (7 - selectedWeekday) * 24 * 3600 * 1000)
 
-            this.weekDateStr = `${monday.pattern("yyyy.MM.dd")} - ${sunday.pattern("yyyy.MM.dd")}`
+            this.weekDateStr = `${monday.pattern("yyyy.MM.dd")} - ${sunday.pattern("yyyy.MM.dd")} （今 ${now.pattern("yyyy.MM.dd")}）`
 
             const menuList = []
             for (let i = 0; i < 7; i++) {
