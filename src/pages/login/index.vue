@@ -35,10 +35,6 @@ export default {
         return {
             telephone: "",
             password: "",
-<<<<<<< HEAD
-            // imageUrl: "/static/image/bj.jpg",
-=======
->>>>>>> master
             agreementChecked: false,
             hasError: false
         }
