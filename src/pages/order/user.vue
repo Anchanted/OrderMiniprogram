@@ -72,7 +72,7 @@ import { mapState } from "vuex"
             checkDate() {
                 return (i) => {
                     const order = this.orderList[i]
-                    // const now = new Date(this.nowDateStr)
+                    // const now = new Date(this.nowDateStr.replace(/\.|\-/g, '/'))
                     const now = new Date()
                     const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
                     let selectedDate = now
@@ -82,7 +82,7 @@ import { mapState } from "vuex"
                         } else {
                             const nextDay = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
                             if (nextDay) {
-                                selectedDate = new Date(`${nextDay["dayStr"]} ${now.pattern("HH:mm:ss")}`)
+                                selectedDate = new Date(`${nextDay["dayStr"]}T${now.pattern("HH:mm:ss")}`)
                             }
                         }
                     }
@@ -133,7 +133,7 @@ import { mapState } from "vuex"
                     pageNum: 1,
                     pageSize: 10,
                     userId: this.user.id,
-                    timeStart: new Date("2020-01-01").pattern("yyyy-MM-dd"),
+                    timeStart: new Date("2020-01-01".replace(/\.|\-/g, '/')).pattern("yyyy-MM-dd"),
                     timeEnd: new Date().pattern("yyyy-MM-dd")
                 },
             }).then(data => {
@@ -166,13 +166,13 @@ import { mapState } from "vuex"
                     return {
                         ...order,
                         courseList,
-                        date: new Date(order.dataTime).pattern("yyyy-MM-dd"),
-                        orderTime: new Date(order.stime).pattern("yyyy-MM-dd HH:mm:ss"),
-                        cancelTime: order.remark && new Date(order.remark).pattern("yyyy-MM-dd HH:mm:ss")
+                        date: new Date(order.dataTime.replace(/\.|\-/g, '/')).pattern("yyyy-MM-dd"),
+                        orderTime: new Date(order.stime.replace(/\.|\-/g, '/')).pattern("yyyy-MM-dd HH:mm:ss"),
+                        cancelTime: order.remark && new Date(order.remark.replace(/\.|\-/g, '/')).pattern("yyyy-MM-dd HH:mm:ss")
                     }
                 })
 
-                orderList.sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime))
+                orderList.sort((a, b) => new Date(b.orderTime.replace(/\.|\-/g, '/')) - new Date(a.orderTime.replace(/\.|\-/g, '/')))
                 this.orderList = orderList
             }).catch(err => {
                 console.log(err)

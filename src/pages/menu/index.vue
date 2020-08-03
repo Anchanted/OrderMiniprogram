@@ -1,5 +1,6 @@
 <template>
 	<div class="menu-container">
+        <div class="notification">当前工作日订餐时间为上个工作日的8:00至16:00</div>
         <div class="week-date">{{weekDateStr}}</div>
         <div class="navbar">
             <div v-for="(weekday, i) in weekdayList" :key="i" class="navbar-item-container">
@@ -101,7 +102,7 @@ import { mapState } from "vuex"
                     }
                 ],
 
-                // selectedDate: new Date(this.nowDateStr),
+                // selectedDate: new Date(this.nowDateStr.replace(/\.|\-/g, '/')),
                 selectedDate: new Date(),
                 selectedDateOrder: [
                     [null, null],
@@ -206,7 +207,7 @@ import { mapState } from "vuex"
             this.orderedCountList = [0, 0, 0, 0, 0, 0, 0]
             this.totalPrice = 0
 
-            // const now = new Date(this.nowDateStr)
+            // const now = new Date(this.nowDateStr.replace(/\.|\-/g, '/'))
             const now = new Date()
             // uni.setNavigationBarTitle({
             //     title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
@@ -220,11 +221,12 @@ import { mapState } from "vuex"
                 } else {
                     const nextDay = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
                     if (nextDay) {
-                        selectedDate = new Date(`${nextDay["dayStr"]} ${now.pattern("HH:mm:ss")}`)
+                        selectedDate = new Date(`${nextDay["dayStr"]}T${now.pattern("HH:mm:ss")}`)
                     }
                 }
             }
             this.selectedDate = selectedDate
+            console.log(selectedDate)
 
             const selectedWeekday = this.selectedDate.getDay() == 0 ? 7 : this.selectedDate.getDay()
             const hour = this.selectedDate.getHours()
@@ -234,7 +236,7 @@ import { mapState } from "vuex"
             const monday = new Date(this.selectedDate.getTime() + (1 - selectedWeekday) * 24 * 3600 * 1000)
             const sunday = new Date(this.selectedDate.getTime() + (7 - selectedWeekday) * 24 * 3600 * 1000)
 
-            this.weekDateStr = `${monday.pattern("yyyy.MM.dd")} - ${sunday.pattern("yyyy.MM.dd")} （今 ${now.pattern("yyyy.MM.dd")}）`
+            this.weekDateStr = `${monday.pattern("yyyy.MM.dd")} - ${sunday.pattern("yyyy.MM.dd")}（今 ${now.pattern("yyyy.MM.dd")}）`
 
             const menuList = []
             for (let i = 0; i < 7; i++) {
@@ -293,48 +295,48 @@ import { mapState } from "vuex"
                 console.log(menuList)
                 this.menuList = JSON.parse(JSON.stringify(menuList))
 
-                this.request({
-                    url: "/FoodData/ByUserId",
-                    method: "GET",
-                    data: {
-                        pageNum: 1,
-                        pageSize: 10,
-                        userId: this.user.id,
-                        timeStart: this.selectedDate.pattern("yyyy-MM-dd"),
-                        timeEnd: this.selectedDate.pattern("yyyy-MM-dd")
-                    }
-                }).then(data => {
-                    console.log(data)
-                    const order = data.data.list.find(order => !order.mark)
-                    if (order) {
-                        const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
-                        for (let key in order) {
-                            if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
-                                if (order[key]) {
-                                    const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
-                                    const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
-                                    const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
-                                    selectedDateOrder[mealType - 1][courseType - 1] = size
-                                }
-                            }
-                        }
-                        this.selectedDateOrder = selectedDateOrder
-                        console.log(this.selectedDateOrder)
-                    } else {
-                        for (let j = 0; j < 3; j++) {
-                            for (let k = 0; k < 2; k++) {
-                                this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
-                            }
-                        }
-                    }
-                }).catch(err => {
-                    console.log(err)
-                    for (let j = 0; j < 3; j++) {
-                        for (let k = 0; k < 2; k++) {
-                            this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
-                        }
-                    }
-                })
+                // this.request({
+                //     url: "/FoodData/ByUserId",
+                //     method: "GET",
+                //     data: {
+                //         pageNum: 1,
+                //         pageSize: 10,
+                //         userId: this.user.id,
+                //         timeStart: this.selectedDate.pattern("yyyy-MM-dd"),
+                //         timeEnd: this.selectedDate.pattern("yyyy-MM-dd")
+                //     }
+                // }).then(data => {
+                //     console.log(data)
+                //     const order = data.data.list.find(order => !order.mark)
+                //     if (order) {
+                //         const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
+                //         for (let key in order) {
+                //             if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
+                //                 if (order[key]) {
+                //                     const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
+                //                     const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
+                //                     const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
+                //                     selectedDateOrder[mealType - 1][courseType - 1] = size
+                //                 }
+                //             }
+                //         }
+                //         this.selectedDateOrder = selectedDateOrder
+                //         console.log(this.selectedDateOrder)
+                //     } else {
+                //         for (let j = 0; j < 3; j++) {
+                //             for (let k = 0; k < 2; k++) {
+                //                 this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
+                //             }
+                //         }
+                //     }
+                // }).catch(err => {
+                //     console.log(err)
+                //     for (let j = 0; j < 3; j++) {
+                //         for (let k = 0; k < 2; k++) {
+                //             this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
+                //         }
+                //     }
+                // })
             } catch (error) {
                 console.log(error)
                 uni.stopPullDownRefresh()
@@ -384,6 +386,17 @@ import { mapState } from "vuex"
         display: flex;
         flex-direction: column;
         height: 100%;
+
+        .notification {
+            width: 100%;
+            height: 20px;
+            font-size: 12px;
+            line-height: 20px;
+            background: #FFFFFF;
+            text-align: center;
+            color: #A8A8A8;
+            border-bottom: 1px solid #F5F5F5;
+        }
 
         .week-date {
             width: 100%;
@@ -443,7 +456,7 @@ import { mapState } from "vuex"
     }
 
     .menu-content-wrapper{
-        height: calc(100% - 130px);
+        height: calc(100% - 150px);
         // margin-top: 50px;
 
         .menu-content-swiper {

@@ -4,12 +4,12 @@
             <div class="date-picker-container">
                 <picker mode="date" :value="date" :start="calendarStartDate" :end="calendarEndDate" @change="bindStartDateChange">
                     <span class="start-date-format">{{startDate}}</span>
-                    <span class="start-date-weekday date-weekday">{{new Date(startDate).pattern("EE")}}</span>
+                    <span class="start-date-weekday date-weekday">{{new Date(startDate.replace(/\.|\-/g, '/')).pattern("EE")}}</span>
                 </picker>
                 <span>至</span>
                 <picker mode="date" :value="date" :start="calendarStartDate" :end="calendarEndDate" @change="bindEndDateChange">
                     <span class="end-date-format">{{endDate}}</span>
-                    <span class="end-date-weekday date-weekday">{{new Date(endDate).pattern("EE")}}</span>
+                    <span class="end-date-weekday date-weekday">{{new Date(endDate.replace(/\.|\-/g, '/')).pattern("EE")}}</span>
                 </picker>
             </div>
             <button class="date-search-button" type="primary" @tap="onTapSearch">查询</button>
@@ -62,7 +62,7 @@ import { mapState } from "vuex"
                 this.endDate = e.target.value
             },
             getDate(type) {
-                // const date = new Date(this.nowDateStr);
+                // const date = new Date(this.nowDateStr.replace(/\.|\-/g, '/'));
                 const date = new Date();
                 let year = date.getFullYear();
                 let month = date.getMonth() + 1;

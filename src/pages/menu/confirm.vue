@@ -150,7 +150,7 @@ import { mapState } from "vuex"
                     } else
                         return order1.mealType - order2.mealType
                 } else 
-                    return new Date(order1.date) - new Date(order2.date)
+                    return new Date(order1.date.replace(/\.|\-/g, '/')) - new Date(order2.date.replace(/\.|\-/g, '/'))
             })
 
             const dateMap = new Map()
@@ -168,7 +168,7 @@ import { mapState } from "vuex"
             })
             
             dateMap.forEach((value, key) => {
-                const date = new Date(key)
+                const date = new Date(key.replace(/\.|\-/g, '/'))
                 this.dateOrderList.push({
                     date: key,
                     dateText: date.pattern("yyyy-MM-dd EE"),
