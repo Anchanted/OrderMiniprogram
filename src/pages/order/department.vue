@@ -62,6 +62,7 @@ import { mapState } from "vuex"
                 this.endDate = e.target.value
             },
             getDate(type) {
+                // const date = new Date(this.nowDateStr);
                 const date = new Date();
                 let year = date.getFullYear();
                 let month = date.getMonth() + 1;

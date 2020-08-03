@@ -63,16 +63,20 @@ import { mapState } from "vuex"
                             }
                         })
 
-                        if (data.data.list.length) {
+                        console.log(data)
+
+                        uni.hideLoading()
+                        if (data.data.list.length
+                            && data.data.list.some(order => !order.mark)) {
                             uni.showToast({
                                 icon: "none",
                                 title: "您已有本日订单",
                                 duration: 2000
                             });
+                            return
                         }
                     } catch (error) {
                         console.log(error)
-                    } finally {
                         uni.hideLoading()
                     }
 

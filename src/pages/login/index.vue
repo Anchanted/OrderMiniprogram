@@ -1,17 +1,16 @@
 <template>
     <div class="login-page">
-        <!-- <div class="bg" :style="{ backgroundImage: `url(${imageUrl})` }"></div> -->
         <image class="bg" src="/static/image/bj.jpg"></image>
         <image class="logo" src="/static/image/logo.jpg"></image>
         <image class="title" src="/static/image/4.png"></image>
         <div class="error" v-if="hasError">用户名或密码错误</div>
         <div class="form-item">
             <!-- <label>手机号：</label> -->
-            <input class="inputText" type="text" placeholder="请输入手机号" v-model.trim="telephone" />
+            <input class="inputText" type="text" placeholder="请输入手机号" @input="onTelephoneInput" />
         </div>
         <div class="form-item">
             <!-- <label>密码：</label> -->
-            <input class="inputText" type="password" placeholder="请输入密码" v-model.trim="password" />
+            <input class="inputText" type="password" placeholder="请输入密码" @input="onPasswordInput" />
         </div>
         <button class="butt" @click="login" id="btn" >登录</button>
         <div class="bbb">
@@ -36,7 +35,10 @@ export default {
         return {
             telephone: "",
             password: "",
+<<<<<<< HEAD
             // imageUrl: "/static/image/bj.jpg",
+=======
+>>>>>>> master
             agreementChecked: false,
             hasError: false
         }
@@ -96,7 +98,12 @@ export default {
                     uni.hideLoading()
                 })
             }
-
+        },
+        onTelephoneInput({ detail }) {
+            this.telephone = detail.value
+        },
+        onPasswordInput({ detail }) {
+            this.password = detail.value
         },
         wjmm() {
             uni.showModal({
@@ -161,22 +168,18 @@ export default {
     }
 
     .form-item { 
-        position: relative;  
-        padding-bottom: 3px;
+        width: 250px; 
         margin-top: 10px;
+        border-radius: 25px;
+        background-color: #fff; 
         display: flex;
         justify-content: center;
 
         input { 
-            width: 250px; 
-            height: 40px; 
-            border: 1px solid #fff; 
-            border-radius: 25px;
+            width: 210px;
+            height: 40px;
             font-size: 18px; 
-            background-color: #fff; 
             outline: none;
-            display: flex;
-            justify-content: center;
         }
     }
 
