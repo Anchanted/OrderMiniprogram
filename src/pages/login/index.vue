@@ -1,8 +1,9 @@
 <template>
     <div class="login-page">
-        <div class="bg" :style="{ backgroundImage: `url(${imageUrl})` }"></div>
+        <!-- <div class="bg" :style="{ backgroundImage: `url(${imageUrl})` }"></div> -->
+        <image class="bg" src="/static/image/bj.jpg"></image>
         <image class="logo" src="/static/image/logo.jpg"></image>
-        <image class="title" src="/static/image/2.png"></image>
+        <image class="title" src="/static/image/4.png"></image>
         <div class="error" v-if="hasError">用户名或密码错误</div>
         <div class="form-item">
             <!-- <label>手机号：</label> -->
@@ -16,8 +17,8 @@
         <div class="bbb">
             <div class="yh">
                 <checkbox-group @change="onChangeCheckbox">
-                    <checkbox value="xieyi"></checkbox>
-                    <text class="agreement-text" @tap="yhxy">用户协议</text>
+                    <!-- <checkbox value="xieyi"></checkbox> -->
+                    <!-- <text class="agreement-text" @tap="yhxy">用户协议</text> -->
                 </checkbox-group>
                 <text class="forget-text" @tap="wjmm">忘记密码？</text>
             </div>
@@ -35,7 +36,7 @@ export default {
         return {
             telephone: "",
             password: "",
-            imageUrl: "/static/image/bj.jpg",
+            // imageUrl: "/static/image/bj.jpg",
             agreementChecked: false,
             hasError: false
         }
@@ -49,12 +50,12 @@ export default {
                     title:'用户名或密码不能为空',
                     duration:2000,
                 })
-            } else if (!this.agreementChecked) {
-                uni.showToast({
-                    icon:'none',
-                    title:'请勾选用户协议',
-                    duration:2000,
-                })
+            // } else if (!this.agreementChecked) {
+            //     uni.showToast({
+            //         icon:'none',
+            //         title:'请勾选用户协议',
+            //         duration:2000,
+            //     })
             } else {
                 this.hasError = false
 
@@ -109,15 +110,15 @@ export default {
         onChangeCheckbox({ detail }) {
             this.agreementChecked = detail.value.length > 0
         },
-        yhxy() {
-            uni.showModal({
-                title:'用户协议',
-                content:'华北石油管理局有限公司华北油田宾馆同意按照本协议的规定及其不时发布的操作规则向用户提供餐饮统计服务。为获得餐饮统计服务， 本小程序服务使用人（以下称“用户”）需在认真阅读及独立思考的基础上认可、同意本协议的全部条款并按照页面上的提示完成全部的注册程序。用户在进行注册过程中点击“同意”按钮即表示用户完全接受本服务协议。如用户对本服务协议或协议的任何部分存有任何异议，应终止注册程序（或停止使用本小程序服务）。',
-                success:function(res){
-                    console.log('用户点击确定');
-                }
-            })
-        },
+        // yhxy() {
+        //     uni.showModal({
+        //         title:'用户协议',
+        //         content:'',
+        //         success:function(res){
+        //             console.log('用户点击确定');
+        //         }
+        //     })
+        // },
     },
     onShow() {
         // #ifdef MP-WEIXIN  
@@ -213,6 +214,10 @@ export default {
         }
     }
     .bg{
+        display: flex;
+        // flex-direction: column;
+        // align-items: center;
+        // height: 150px;
         position: absolute;
         top: 0;
         left: 0;

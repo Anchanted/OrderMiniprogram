@@ -1,7 +1,7 @@
 const mixin = {
     data() {
         return {
-            apiUrl: "http://119.88.168.130:18096",
+            apiUrl: "https://yddc.oilhb.com:8097",
             nowDateStr: "2020-07-13 12:00:00"
         }
     },

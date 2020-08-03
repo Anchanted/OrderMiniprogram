@@ -102,7 +102,7 @@ import { mapState } from "vuex"
                         price: "大份15元\n小份14元"
                     }
                 ],
-                selectedDate: new Date(this.nowDateStr),
+                selectedDate: new Date(),
                 selectedDateOrder: [
                     [null, null],
                     [null, null],
@@ -202,10 +202,10 @@ import { mapState } from "vuex"
         },
 
         async onPullDownRefresh(){
-            const now = new Date(this.nowDateStr)
-            uni.setNavigationBarTitle({
-                title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
-            })
+            const now = new Date()
+            // uni.setNavigationBarTitle({
+            //     title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
+            // })
 
             const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
             let selectedDate = now
