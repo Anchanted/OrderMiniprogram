@@ -12,7 +12,7 @@
             <!-- <label>密码：</label> -->
             <input class="inputText" type="password" placeholder="请输入密码" @input="onPasswordInput" />
         </div>
-        <button class="butt" @click="login" id="btn" >登录</button>
+        <button class="button" type="primary" @click="login">登录</button>
         <div class="bbb">
             <div class="yh">
                 <checkbox-group @change="onChangeCheckbox">
@@ -74,7 +74,7 @@ export default {
                 }).then(data => {
                     console.log(data)
                     uni.hideLoading()
-                    if (data.data) {
+                    if (data.data && data.data.roleId !== 1) {
                         uni.setStorageSync("user", data.data)
                         this.$store.commit("setUser", data.data)
                         if (this.password.length < 12) {
@@ -105,7 +105,7 @@ export default {
             uni.showModal({
                 title:'友情提示',
                 content:'如忘记密码，请联系餐厅管理员进行修改！',
-                success:function(res){
+                success:function(res) {
                     console.log('用户点击确定');
                 }
             })
@@ -179,13 +179,14 @@ export default {
         }
     }
 
-    .butt { 
+    .button { 
         width: 250px;
         height: 40px; 
+        font-size: 18px; 
+        line-height: 40px;
         margin-top: 10px;
         border: 0; 
         border-radius: 25px; 
-        font-size: 18px; 
         color: #1f6f4a; 
         outline: none; 
         cursor: pointer; 
