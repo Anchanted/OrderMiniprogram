@@ -100,6 +100,7 @@ import { mapState } from "vuex"
                         price: "大份15元\n小份14元"
                     }
                 ],
+
                 // selectedDate: new Date(this.nowDateStr),
                 selectedDate: new Date(),
                 selectedDateOrder: [
