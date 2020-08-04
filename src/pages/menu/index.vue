@@ -207,7 +207,6 @@ import { mapState } from "vuex"
             this.totalPrice = 0
 
             const now = new Date()
-            console.log(now.pattern("yyyy-MM-dd HH:mm:ss"))
             const hour = now.getHours()
             // uni.setNavigationBarTitle({
             //     title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
@@ -226,7 +225,7 @@ import { mapState } from "vuex"
                     }
                 }
             }
-            console.log(selectedDate)
+            // console.log(selectedDate)
             this.selectedDate = selectedDate
             // uni.showToast({
             //     icon: "none",
@@ -297,7 +296,7 @@ import { mapState } from "vuex"
                         display: false
                     }
                 })
-                console.log(menuList)
+                // console.log(menuList)
                 this.menuList = JSON.parse(JSON.stringify(menuList))
 
                 this.request({

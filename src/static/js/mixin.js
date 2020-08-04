@@ -1,8 +1,8 @@
 const mixin = {
     data() {
         return {
-            apiUrl: "http://172.16.0.102:8096/",
-            // apiUrl: "https://yddc.oilhb.com:8097/"
+            // apiUrl: "http://172.16.0.102:8096",
+            apiUrl: "https://yddc.oilhb.com:8097"
         }
     },
     computed: {
