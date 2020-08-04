@@ -72,7 +72,6 @@ import { mapState } from "vuex"
             checkDate() {
                 return (i) => {
                     const order = this.orderList[i]
-                    // const now = new Date(this.nowDateStr.replace(/\.|\-/g, '/'))
                     const now = new Date()
                     const hour = now.getHours()
                     const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])

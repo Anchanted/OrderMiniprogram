@@ -102,7 +102,6 @@ import { mapState } from "vuex"
                     }
                 ],
 
-                // selectedDate: new Date(this.nowDateStr.replace(/\.|\-/g, '/')),
                 selectedDate: new Date(),
                 selectedDateOrder: [
                     [null, null],
@@ -207,8 +206,8 @@ import { mapState } from "vuex"
             this.orderedCountList = [0, 0, 0, 0, 0, 0, 0]
             this.totalPrice = 0
 
-            // const now = new Date(this.nowDateStr.replace(/\.|\-/g, '/'))
             const now = new Date()
+            console.log(now.pattern("yyyy-MM-dd HH:mm:ss"))
             const hour = now.getHours()
             // uni.setNavigationBarTitle({
             //     title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
@@ -234,7 +233,6 @@ import { mapState } from "vuex"
             //     title: this.selectedDate.toString(),
             //     duration: 10000
             // })
-
             const selectedWeekday = this.selectedDate.getDay() == 0 ? 7 : this.selectedDate.getDay()
 
             this.navbarActiveIndex = selectedWeekday - 1
@@ -303,18 +301,16 @@ import { mapState } from "vuex"
                 this.menuList = JSON.parse(JSON.stringify(menuList))
 
                 this.request({
-                    url: "/FoodData/ByUserId",
+                    url: "/FoodData/ById",
                     method: "GET",
                     data: {
-                        pageNum: 1,
-                        pageSize: 10,
                         userId: this.user.id,
-                        timeStart: this.selectedDate.pattern("yyyy-MM-dd"),
-                        timeEnd: this.selectedDate.pattern("yyyy-MM-dd")
+                        timeStart: `${this.selectedDate.pattern("yyyy-MM-dd")} 00:00:00`,
+                        timeEnd: `${this.selectedDate.pattern("yyyy-MM-dd")} 00:00:00`
                     }
                 }).then(data => {
                     console.log(data)
-                    const order = data.data.list.find(order => !order.mark)
+                    const order = data.data.find(order => !order.mark)
                     if (order) {
                         const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
                         for (let key in order) {
