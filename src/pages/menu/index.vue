@@ -209,6 +209,7 @@ import { mapState } from "vuex"
 
             // const now = new Date(this.nowDateStr.replace(/\.|\-/g, '/'))
             const now = new Date()
+            const hour = now.getHours()
             // uni.setNavigationBarTitle({
             //     title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
             // })
@@ -221,15 +222,20 @@ import { mapState } from "vuex"
                 } else {
                     const nextDay = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
                     if (nextDay) {
-                        selectedDate = new Date(`${nextDay["dayStr"]}T${now.pattern("HH:mm:ss")}`)
+                        const ISODate = new Date(`${nextDay["dayStr"]}T${now.pattern("HH:mm:ss")}Z`)
+                        selectedDate = new Date(ISODate.getTime() + ISODate.getTimezoneOffset() * 60 * 1000)
                     }
                 }
             }
-            this.selectedDate = selectedDate
             console.log(selectedDate)
+            this.selectedDate = selectedDate
+            // uni.showToast({
+            //     icon: "none",
+            //     title: this.selectedDate.toString(),
+            //     duration: 10000
+            // })
 
             const selectedWeekday = this.selectedDate.getDay() == 0 ? 7 : this.selectedDate.getDay()
-            const hour = this.selectedDate.getHours()
 
             this.navbarActiveIndex = selectedWeekday - 1
 
@@ -237,6 +243,7 @@ import { mapState } from "vuex"
             const sunday = new Date(this.selectedDate.getTime() + (7 - selectedWeekday) * 24 * 3600 * 1000)
 
             this.weekDateStr = `${monday.pattern("yyyy.MM.dd")} - ${sunday.pattern("yyyy.MM.dd")}（今 ${now.pattern("yyyy.MM.dd")}）`
+            // this.weekDateStr = `（今 ${now.pattern("yyyy.MM.dd HH")}） ${this.selectedDate.pattern("yyyy-MM-dd")}`
 
             const menuList = []
             for (let i = 0; i < 7; i++) {
@@ -352,7 +359,7 @@ import { mapState } from "vuex"
             try {
                 const user = uni.getStorageSync("user")
                 console.log(user)
-				if (user) {
+				if (user && user.password && user.password.match(/^[a-zA-Z0-9]{12,20}$/g)) {
 					this.$store.commit("setUser", user)
 				} else {
 					uni.redirectTo({

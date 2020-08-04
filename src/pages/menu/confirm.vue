@@ -82,7 +82,7 @@ import { mapState } from "vuex"
 
                     const courseObj = {}
                     courseObj["userId"] = this.user.id
-                    courseObj["dataTime"] = order.date + " 00:00:00"
+                    courseObj["dataTime"] = order.date
 
                     order.courseList.forEach(course => {
                         let courseKey = ""
@@ -139,6 +139,7 @@ import { mapState } from "vuex"
             }
         },
 		onLoad() {
+            console.log(this.globalOrderList)
             const courseList = JSON.parse(JSON.stringify(this.globalOrderList))
             courseList.sort((order1, order2) => {
                 if (order1.date === order2.date) {

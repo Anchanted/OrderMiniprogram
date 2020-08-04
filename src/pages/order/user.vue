@@ -74,6 +74,7 @@ import { mapState } from "vuex"
                     const order = this.orderList[i]
                     // const now = new Date(this.nowDateStr.replace(/\.|\-/g, '/'))
                     const now = new Date()
+                    const hour = now.getHours()
                     const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
                     let selectedDate = now
                     if (todayIndex != null) {
@@ -82,11 +83,12 @@ import { mapState } from "vuex"
                         } else {
                             const nextDay = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
                             if (nextDay) {
-                                selectedDate = new Date(`${nextDay["dayStr"]}T${now.pattern("HH:mm:ss")}`)
+                                const ISODate = new Date(`${nextDay["dayStr"]}T${now.pattern("HH:mm:ss")}Z`)
+                                selectedDate = new Date(ISODate.getTime() + ISODate.getTimezoneOffset() * 60 * 1000)
                             }
                         }
                     }
-                    return selectedDate.pattern("yyyy-MM-dd") === order.date && (selectedDate.getHours() >= 8 && selectedDate.getHours() < 16)
+                    return selectedDate.pattern("yyyy-MM-dd") === order.date && (hour >= 8 && hour < 16)
                 }
             }
         },
@@ -133,8 +135,8 @@ import { mapState } from "vuex"
                     pageNum: 1,
                     pageSize: 10,
                     userId: this.user.id,
-                    timeStart: new Date("2020-01-01".replace(/\.|\-/g, '/')).pattern("yyyy-MM-dd"),
-                    timeEnd: new Date().pattern("yyyy-MM-dd")
+                    timeStart: new Date("2020-01-01".replace(/\.|\-/g, '/')).pattern("yyyy-MM-dd HH:mm:ss"),
+                    timeEnd: new Date().pattern("yyyy-MM-dd HH:mm:ss")
                 },
             }).then(data => {
                 console.log(data)
