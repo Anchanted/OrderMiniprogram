@@ -295,48 +295,48 @@ import { mapState } from "vuex"
                 console.log(menuList)
                 this.menuList = JSON.parse(JSON.stringify(menuList))
 
-                // this.request({
-                //     url: "/FoodData/ByUserId",
-                //     method: "GET",
-                //     data: {
-                //         pageNum: 1,
-                //         pageSize: 10,
-                //         userId: this.user.id,
-                //         timeStart: this.selectedDate.pattern("yyyy-MM-dd"),
-                //         timeEnd: this.selectedDate.pattern("yyyy-MM-dd")
-                //     }
-                // }).then(data => {
-                //     console.log(data)
-                //     const order = data.data.list.find(order => !order.mark)
-                //     if (order) {
-                //         const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
-                //         for (let key in order) {
-                //             if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
-                //                 if (order[key]) {
-                //                     const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
-                //                     const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
-                //                     const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
-                //                     selectedDateOrder[mealType - 1][courseType - 1] = size
-                //                 }
-                //             }
-                //         }
-                //         this.selectedDateOrder = selectedDateOrder
-                //         console.log(this.selectedDateOrder)
-                //     } else {
-                //         for (let j = 0; j < 3; j++) {
-                //             for (let k = 0; k < 2; k++) {
-                //                 this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
-                //             }
-                //         }
-                //     }
-                // }).catch(err => {
-                //     console.log(err)
-                //     for (let j = 0; j < 3; j++) {
-                //         for (let k = 0; k < 2; k++) {
-                //             this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
-                //         }
-                //     }
-                // })
+                this.request({
+                    url: "/FoodData/ByUserId",
+                    method: "GET",
+                    data: {
+                        pageNum: 1,
+                        pageSize: 10,
+                        userId: this.user.id,
+                        timeStart: this.selectedDate.pattern("yyyy-MM-dd"),
+                        timeEnd: this.selectedDate.pattern("yyyy-MM-dd")
+                    }
+                }).then(data => {
+                    console.log(data)
+                    const order = data.data.list.find(order => !order.mark)
+                    if (order) {
+                        const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
+                        for (let key in order) {
+                            if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
+                                if (order[key]) {
+                                    const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
+                                    const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
+                                    const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
+                                    selectedDateOrder[mealType - 1][courseType - 1] = size
+                                }
+                            }
+                        }
+                        this.selectedDateOrder = selectedDateOrder
+                        console.log(this.selectedDateOrder)
+                    } else {
+                        for (let j = 0; j < 3; j++) {
+                            for (let k = 0; k < 2; k++) {
+                                this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
+                            }
+                        }
+                    }
+                }).catch(err => {
+                    console.log(err)
+                    for (let j = 0; j < 3; j++) {
+                        for (let k = 0; k < 2; k++) {
+                            this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
+                        }
+                    }
+                })
             } catch (error) {
                 console.log(error)
                 uni.stopPullDownRefresh()
