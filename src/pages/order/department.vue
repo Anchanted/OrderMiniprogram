@@ -41,8 +41,8 @@ import { mapState } from "vuex"
 	export default {
 		data() {
 			return {
-                startDate: null,
-                endDate: null,
+                startDate: this.getDate(),
+                endDate: this.getDate(),
                 calendarStartDate: "2020-01-01",
                 calendarEndDate: "2021-01-01",
                 department: "公司办公室",
@@ -52,7 +52,7 @@ import { mapState } from "vuex"
         computed: {
             ...mapState({
                 user: state => state.user
-            }),
+            })
         },
         methods: {
             bindStartDateChange(e) {
@@ -177,9 +177,6 @@ import { mapState } from "vuex"
             }
         },
 		onLoad() {
-            this.startDate = this.getDate()
-            this.endDate = this.getDate()
-
             uni.setNavigationBarTitle({
                 title: `${this.department}订餐详情`
             })
