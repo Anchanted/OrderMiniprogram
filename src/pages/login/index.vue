@@ -1,28 +1,30 @@
 <template>
     <div class="login-page">
-        <image class="bg" src="/static/image/bj.jpg"></image>
-        <image class="logo" src="/static/image/logo.jpg"></image>
-        <image class="title" src="/static/image/4.png"></image>
-        <div class="error" v-if="hasError">用户名或密码错误</div>
-        <div class="form-item">
-            <!-- <label>手机号：</label> -->
-            <input class="inputText" type="text" placeholder="请输入手机号" @input="onTelephoneInput" />
+        <!-- <image class="bg" src="/static/image/bj.jpg"></image> -->
+        <image class="logo" src="/static/image/logo.png"></image>
+        <!-- <image class="title" src="/static/image/4.png"></image> -->
+        <div class="title title-zh">宾馆点餐</div>
+        <div class="title title-en">Hotel Order</div>
+        <!-- <div class="error" v-if="hasError">用户名或密码错误</div> -->
+        <div class="form-item telephone-input">
+            <image class="input-icon" src="/static/image/phone.png"></image>
+            <input class="form-input" type="text" placeholder="请输入手机号" @input="onTelephoneInput" />
         </div>
-        <div class="form-item">
-            <!-- <label>密码：</label> -->
-            <input class="inputText" type="password" placeholder="请输入密码" @input="onPasswordInput" />
+        <div class="form-item password-input">
+            <image class="input-icon" src="/static/image/lock.png"></image>
+            <input class="form-input" type="password" placeholder="请输入密码" @input="onPasswordInput" />
         </div>
-        <button class="button" type="primary" @click="login">登录</button>
+        <button class="button" @click="login">登录</button>
         <div class="bbb">
             <div class="yh">
-                <checkbox-group @change="onChangeCheckbox">
-                    <!-- <checkbox value="xieyi"></checkbox> -->
-                    <!-- <text class="agreement-text" @tap="yhxy">用户协议</text> -->
-                </checkbox-group>
+                <!-- <checkbox-group @change="onChangeCheckbox">
+                    <checkbox value="xieyi"></checkbox>
+                    <text class="agreement-text" @tap="yhxy">用户协议</text>
+                </checkbox-group> -->
                 <text class="forget-text" @tap="wjmm">忘记密码？</text>
             </div>
         </div>
-        <!-- <button class="cancel_btn" @click="backLogin">{{backText}}</button> -->
+        <image class="bottom-image" src="/static/image/loginbottom.png"></image>
     </div>
 </template>
 
@@ -102,9 +104,11 @@ export default {
             this.password = detail.value
         },
         wjmm() {
+            console.log("here")
             uni.showModal({
                 title:'友情提示',
                 content:'如忘记密码，请联系餐厅管理员进行修改！',
+                showCancel: false,
                 success:function(res) {
                     console.log('用户点击确定');
                 }
@@ -117,6 +121,7 @@ export default {
         //     uni.showModal({
         //         title:'用户协议',
         //         content:'',
+        //         showCancel: false,
         //         success:function(res){
         //             console.log('用户点击确定');
         //         }
@@ -138,20 +143,33 @@ export default {
     .login-page {
         width: 100%;
         height: 100%;
+        background-color: #ffe243;
         display: flex;
         flex-direction: column;
         align-items: center;
+        position: relative;
 
         .logo {
-            width: 70px; 
-            height: 70px;
-            margin-top: 80px;
+            width: 250upx; 
+            height: 250upx;
+            margin-top: 30px;
         }
 
         .title {
-            width:210px;
-            height:50px;
-            margin-top: 10px;
+            // width:210px;
+            // height:50px;
+            // margin-top: 10px;
+            color: #342704;
+        }
+
+        .title-zh {
+            font-weight: bold;
+            font-size: 70rpx;
+            letter-spacing: 10rpx;
+        }
+
+        .title-en {
+            font-size: 48rpx;
         }
 
         .error {
@@ -164,33 +182,52 @@ export default {
     }
 
     .form-item { 
-        width: 250px; 
-        margin-top: 10px;
-        border-radius: 25px;
-        background-color: #fff; 
+        width: 500rpx; 
+        background-color: #ffffff; 
+        padding: 5px 0;
         display: flex;
         justify-content: center;
+        align-items: center;
 
-        input { 
-            width: 210px;
+        .input-icon {
+            width: 60rpx;
+            height: 60rpx;
+        }
+
+        .form-input { 
+            width: 400rpx;
             height: 40px;
             font-size: 18px; 
             outline: none;
+            margin-left: 5px;
         }
     }
 
+    .telephone-input {
+        margin-top: 10px;
+        border-top-left-radius: 20rpx;
+        border-top-right-radius: 20rpx;
+        border-bottom: 1rpx solid #dddddd;
+    }
+
+    .password-input {
+        border-bottom-left-radius: 20rpx;
+        border-bottom-right-radius: 20rpx;
+        border-top: 1rpx solid #dddddd;
+    }
+
     .button { 
-        width: 250px;
+        width: 500rpx;
         height: 40px; 
         font-size: 18px; 
         line-height: 40px;
-        margin-top: 10px;
+        letter-spacing: 15px;
+        margin-top: 15px;
         border: 0; 
-        border-radius: 25px; 
-        color: #1f6f4a; 
-        outline: none; 
-        cursor: pointer; 
-        background-color: #fff; 
+        border-radius: 20rpx; 
+        outline: none;
+        background-color: #2d363d; 
+        color: #ffffff;
     }
         
     .bbb{
@@ -200,9 +237,10 @@ export default {
     .yh{
         width: 250px;
         // padding-left: 40px;
-        padding-top: 20px;
+        margin-top: 50px;
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
+        z-index: 2;
 
         .agreement-text {
             color: #09BB07;
@@ -210,7 +248,9 @@ export default {
         }
 
         .forget-text {
-            color: #FFFFFF;
+            // font-size: 20px;
+            font-weight: bold;
+            color: #2d363d;
         }
     }
     .bg{
@@ -234,5 +274,12 @@ export default {
         margin: 0 auto;
         width:80%;
         height: 37px;
+    }
+
+    .bottom-image {
+        width: 750rpx;
+        height: 300rpx;
+        position: absolute;
+        bottom: 0;
     }
 </style>
