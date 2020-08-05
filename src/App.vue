@@ -1,9 +1,42 @@
 <script>
 	export default {
-		onLaunch: function() {
+		async onLaunch() {
 			console.log('App Launch')
+			const user = uni.getStorageSync("user")
+            if (user) {
+				if (user.username && user.password) {
+					try {
+						const data = await this.request({
+							url: "/ulogin",
+							method: "POST",
+							header: {
+								"content-type": "application/x-www-form-urlencoded"
+							},
+							data: {
+								telephone: user.telephone,
+								password: user.password
+							}
+						})
+						console.log(data)
+						if (!data.data) {
+							uni.reLaunch({
+								url: "/pages/login/index"
+							})
+						} else {
+							this.$store.commit("setUser", user)
+						}
+					} catch (error) {
+						console.log(error)
+						this.$store.commit("setUser", user)
+					}
+				}
+            } else {
+                uni.redirectTo({
+                    url: "/pages/login/index"
+                })
+            }
 		},
-		onShow: function() {
+		onShow() {
 			console.log('App Show')
 			// #ifdef MP-WEIXIN  
 			if(wx.hideHomeButton){  
@@ -11,7 +44,7 @@
 			}  
 			// #endif
 		},
-		onHide: function() {
+		onHide() {
 			console.log('App Hide')
 		}
 	}
