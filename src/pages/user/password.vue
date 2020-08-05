@@ -81,7 +81,7 @@ import { mapState } from "vuex"
                 uni.showLoading({
                     title: "加载中"
                 });
-                if (this.oldPassword !== this.user.password) {
+                if (this.encryptPassword(this.oldPassword) !== this.user.password) {
                     uni.hideLoading()
                     uni.showToast({
                         icon: "none",
@@ -98,7 +98,7 @@ import { mapState } from "vuex"
                         },
                         data: {
                             id: this.user.id,
-                            password: this.newPassword
+                            password: this.encryptPassword(this.newPassword)
                         }
                     }).then(data => {
                         console.log(data)

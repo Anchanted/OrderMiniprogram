@@ -1,3 +1,5 @@
+import md5 from "js-md5"
+
 const mixin = {
     data() {
         return {
@@ -30,6 +32,9 @@ const mixin = {
                     }
                 });
             })
+        },
+        encryptPassword(pwd) {
+            return md5(`HB${md5(pwd)}YT`)
         }
     }
 }

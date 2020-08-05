@@ -69,7 +69,7 @@ export default {
                     },
                     data: {
                         telephone: this.telephone,
-                        password: this.password
+                        password: this.encryptPassword(this.password)
                     }
                 }).then(data => {
                     console.log(data)

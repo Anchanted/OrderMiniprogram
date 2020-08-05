@@ -4,6 +4,7 @@
 			<image class="user-image" src="/static/image/user.png" mode="aspectFit"></image>
 			<div class="user-info">
 				<div class="user-info-name"><span>{{`${user.username} (${user.telephone})`}}</span></div>
+				<div class="user-info-secondary">{{user.roleName}}</div>
 				<div class="user-info-secondary"><span>{{user.stationName}}</span></div>
 				<div class="user-info-secondary"><span>{{user.wellName}}</span></div>
 			</div>
@@ -113,7 +114,7 @@ import { mapState } from "vuex"
 				.user-info-name {
 					font-size: 18px;
 					font-weight: bold;
-					margin-bottom: 10px;
+					margin-bottom: 8px;
 				}
 
 				.user-info-secondary {
