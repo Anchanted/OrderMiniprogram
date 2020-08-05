@@ -41,28 +41,7 @@ import { mapState } from "vuex"
 		data() {
 			return {
                 orderList: [],
-                courseTypeList: [
-                    {
-                        name: "早餐",
-                        price: 5
-                    },
-                    {
-                        name: "午餐(大份)",
-                        price: 15
-                    },
-                    {
-                        name: "午餐(小份)",
-                        price: 14
-                    },
-                    {
-                        name: "晚餐(大份)",
-                        price: 15
-                    },
-                    {
-                        name: "晚餐(小份)",
-                        price: 14
-                    }
-                ]
+                orderCanceled: false
 			}
         },
         computed: {
@@ -73,7 +52,6 @@ import { mapState } from "vuex"
                 return (i) => {
                     const order = this.orderList[i]
                     const now = new Date()
-                    const hour = now.getHours()
                     const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
                     let selectedDate = now
                     if (todayIndex != null) {
@@ -87,7 +65,7 @@ import { mapState } from "vuex"
                             }
                         }
                     }
-                    return selectedDate.pattern("yyyy-MM-dd") === order.date && (hour >= 8 && hour < 16)
+                    return selectedDate.pattern("yyyy-MM-dd") === order.date && (now.getHours() >= 8 && now.getHours() < 16)
                 }
             }
         },
@@ -111,6 +89,7 @@ import { mapState } from "vuex"
                         title:'订单取消成功',
                         duration:2000,
                     })
+                    this.orderCanceled = true
                     uni.startPullDownRefresh()
                 }).catch(err => {
                     console.log(err)
@@ -157,7 +136,7 @@ import { mapState } from "vuex"
                                 })
                                 courseList.sort((order1, order2) => {
                                     if (order1.mealType === order2.mealType) {
-                                        return order2.size - order1.size
+                                        return order1.size - order2.size
                                     } else
                                         return order1.mealType - order2.mealType
                                 })
@@ -187,6 +166,13 @@ import { mapState } from "vuex"
         },
         watch: {
             
+        },
+        onUnload() {
+            if (this.orderCanceled) {
+                uni.reLaunch({
+                    url: "/pages/menu/index"
+                })
+            }
         }
 	}
 </script>

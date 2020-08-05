@@ -46,13 +46,30 @@ import { mapState } from "vuex"
         },
         methods: {
             onTapConfirm() {
+                const now = new Date() 
+                if (!(now.getHours() >= 8 && now.getHours() < 16)) {
+                    uni.showModal({
+                        title: "提示",
+                        content: "当前时间不在订餐时间范围内，请在8:00至16:00订餐",
+                        showCancel: false,
+                        success: function({ confirm }) {
+                            if (confirm) {
+                                uni.reLaunch({
+                                    url: "/pages/menu/index"
+                                })
+                            }
+                        }
+                    })
+                    return
+                }
+
                 this.dateOrderList.forEach(async (order) => {
                     uni.showLoading({
                         title: "加载中"
                     })
                     try {
                         const data = await this.request({
-                            url: "/FoodData/ByUserId",
+                            url: "/FoodData/ById",
                             method: "GET",
                             data: {
                                 pageNum: 1,
@@ -62,17 +79,23 @@ import { mapState } from "vuex"
                                 timeEnd: order.date
                             }
                         })
-
                         console.log(data)
 
                         uni.hideLoading()
-                        if (data.data.list.length
-                            && data.data.list.some(order => !order.mark)) {
-                            uni.showToast({
-                                icon: "none",
-                                title: "您已有本日订单",
-                                duration: 2000
-                            });
+                        if (data.data.length
+                            && data.data.some(order => !order.mark)) {
+                            uni.showModal({
+                                title: "提示",
+                                content: "您已有本日订单",
+                                showCancel: false,
+                                success: function({ confirm }) {
+                                    if (confirm) {
+                                        uni.reLaunch({
+                                            url: "/pages/menu/index"
+                                        })
+                                    }
+                                }
+                            })
                             return
                         }
                     } catch (error) {
