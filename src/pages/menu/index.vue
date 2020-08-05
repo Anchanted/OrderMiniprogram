@@ -299,46 +299,48 @@ import { mapState } from "vuex"
                 // console.log(menuList)
                 this.menuList = JSON.parse(JSON.stringify(menuList))
 
-                this.request({
-                    url: "/FoodData/ById",
-                    method: "GET",
-                    data: {
-                        userId: this.user.id,
-                        timeStart: `${this.selectedDate.pattern("yyyy-MM-dd")} 00:00:00`,
-                        timeEnd: `${this.selectedDate.pattern("yyyy-MM-dd")} 00:00:00`
-                    }
-                }).then(data => {
-                    console.log(data)
-                    const order = data.data.find(order => !order.mark)
-                    if (order) {
-                        const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
-                        for (let key in order) {
-                            if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
-                                if (order[key]) {
-                                    const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
-                                    const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
-                                    const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
-                                    selectedDateOrder[mealType - 1][courseType - 1] = size
+                if (this.user.id) {
+                    this.request({
+                        url: "/FoodData/ById",
+                        method: "GET",
+                        data: {
+                            userId: this.user.id,
+                            timeStart: `${this.selectedDate.pattern("yyyy-MM-dd")} 00:00:00`,
+                            timeEnd: `${this.selectedDate.pattern("yyyy-MM-dd")} 00:00:00`
+                        }
+                    }).then(data => {
+                        console.log(data)
+                        const order = data.data.find(order => !order.mark)
+                        if (order) {
+                            const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
+                            for (let key in order) {
+                                if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
+                                    if (order[key]) {
+                                        const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
+                                        const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
+                                        const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
+                                        selectedDateOrder[mealType - 1][courseType - 1] = size
+                                    }
+                                }
+                            }
+                            this.selectedDateOrder = selectedDateOrder
+                            console.log(this.selectedDateOrder)
+                        } else {
+                            for (let j = 0; j < 3; j++) {
+                                for (let k = 0; k < 2; k++) {
+                                    this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
                                 }
                             }
                         }
-                        this.selectedDateOrder = selectedDateOrder
-                        console.log(this.selectedDateOrder)
-                    } else {
+                    }).catch(err => {
+                        console.log(err)
                         for (let j = 0; j < 3; j++) {
                             for (let k = 0; k < 2; k++) {
                                 this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
                             }
                         }
-                    }
-                }).catch(err => {
-                    console.log(err)
-                    for (let j = 0; j < 3; j++) {
-                        for (let k = 0; k < 2; k++) {
-                            this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
-                        }
-                    }
-                })
+                    })
+                }
             } catch (error) {
                 console.log(error)
                 uni.stopPullDownRefresh()
@@ -351,22 +353,6 @@ import { mapState } from "vuex"
         },
 
         onLoad() {
-            try {
-                const user = uni.getStorageSync("user")
-                console.log(user)
-				if (user && user.password && user.password.match(/^[a-zA-Z0-9]{12,20}$/g)) {
-					this.$store.commit("setUser", user)
-				} else {
-					uni.redirectTo({
-						url: "/pages/login/index"
-                    })
-                    return
-				}
-			} catch (err) {
-                // error
-                console.log(err)
-            } 
-
             uni.startPullDownRefresh()
         },
 
