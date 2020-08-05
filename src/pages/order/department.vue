@@ -16,6 +16,7 @@
         </div>
 
         <div class="order-table-container">
+            <div class="order-table-title">{{`${user.stationName}订餐详情`}}</div>
             <div class="order-table">
                 <div class="order-table-header">餐品类别</div>
                 <div class="order-table-header">数量（份）</div>
@@ -45,7 +46,6 @@ import { mapState } from "vuex"
                 endDate: this.getDate(),
                 calendarStartDate: "2020-01-01",
                 calendarEndDate: "2021-01-01",
-                department: "公司办公室",
                 courseList: []
 			}
         },
@@ -176,9 +176,6 @@ import { mapState } from "vuex"
             }
         },
 		onLoad() {
-            uni.setNavigationBarTitle({
-                title: `${this.department}订餐详情`
-            })
             this.onTapSearch()
 		},
         watch: {
@@ -234,6 +231,14 @@ import { mapState } from "vuex"
 
         .order-table-container {
             margin-top: 30px;
+
+            .order-table-title {
+                width: 100%;
+                height: 40px;
+                line-height: 40px;
+                font-weight: bold;
+                text-align: center;
+            }
             
             .order-table {
                 width: 100%;
