@@ -71,7 +71,7 @@ export default {
                     },
                     data: {
                         telephone: this.telephone,
-                        password: this.encryptPassword(this.password)
+                        password: this.password
                     }
                 }).then(data => {
                     console.log(data)
@@ -79,7 +79,7 @@ export default {
                     if (data.data && data.data.roleId !== 1) {
                         uni.setStorageSync("user", data.data)
                         this.$store.commit("setUser", data.data)
-                        if (this.password.length < 12) {
+                        if (!this.password.match(/^[a-zA-Z0-9]{12,20}$/g)) {
                             uni.navigateTo({
                                 url: "/pages/user/password"
                             })

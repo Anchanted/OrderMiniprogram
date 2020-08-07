@@ -7,7 +7,7 @@
 			if (wx.canIUse('getUpdateManager')) {
 				const updateManager = wx.getUpdateManager()
 				updateManager.onCheckForUpdate(res => {
-					console.log(res)
+					// console.log(res)
 					// 请求完新版本信息的回调
 					if (res.hasUpdate) {
 						updateManager.onUpdateReady(() => {
@@ -40,35 +40,33 @@
 			//#endif
 
 			const user = uni.getStorageSync("user")
-            if (user) {
-				if (user.username && user.password) {
-					try {
-						const data = await this.request({
-							url: "/ulogin",
-							method: "POST",
-							header: {
-								"content-type": "application/x-www-form-urlencoded"
-							},
-							data: {
-								telephone: user.telephone,
-								password: user.password
-							}
-						})
-						console.log(data)
-						if (!data.data) {
-							uni.reLaunch({
-								url: "/pages/login/index"
-							})
-						} else {
-							this.$store.commit("setUser", user)
+            if (user && user.username && user.password) {
+				try {
+					const data = await this.request({
+						url: "/ulogin",
+						method: "POST",
+						header: {
+							"content-type": "application/x-www-form-urlencoded"
+						},
+						data: {
+							telephone: user.telephone,
+							password: user.password
 						}
-					} catch (error) {
-						console.log(error)
+					})
+					console.log(data)
+					if (!data.data) {
+						uni.reLaunch({
+							url: "/pages/login/index"
+						})
+					} else {
 						this.$store.commit("setUser", user)
 					}
+				} catch (error) {
+					console.log(error)
+					this.$store.commit("setUser", user)
 				}
             } else {
-                uni.redirectTo({
+                uni.reLaunch({
                     url: "/pages/login/index"
                 })
             }

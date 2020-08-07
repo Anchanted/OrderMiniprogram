@@ -25,16 +25,16 @@ const mixin = {
                     data,
                     header,
                     success: (res) => {
-                        resolve(res.data);
+                        if (res.data && res.data.data)
+                            resolve(res.data)
+                        else
+                            reject(res.msg)
                     },
                     fail: (err) => {
                         reject(err)
                     }
                 });
             })
-        },
-        encryptPassword(pwd) {
-            return md5(`HB${md5(pwd)}YT`)
         }
     }
 }
