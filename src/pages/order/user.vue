@@ -8,7 +8,8 @@
                 </div>
                 <div class="order-course-container">
                     <div v-for="(course, j) in order.courseList" :key="j" class="order-course-list">
-                        <span>{{course.name}} x{{course.count}}</span>
+                        <!-- <span>{{course.name}} x{{course.count}}</span> -->
+                        <span>{{course.name}}</span>
                         <span>￥{{course.price}}</span>
                     </div>
                 </div>
@@ -84,6 +85,9 @@ import { mapState } from "vuex"
                 }).then(data => {
                     console.log(data)
                     uni.hideLoading()
+
+                    if (!data.data) throw new Error("Error from then")
+
                     uni.showToast({
                         icon:'success',
                         title:'订单取消成功',

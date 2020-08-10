@@ -11,8 +11,9 @@
                 <div class="order-info-date-text"><div>{{dateObj.dateText}}</div></div>
                 <div class="order-info-date-content">
                     <div v-for="(course, j) in dateObj.courseList" :key="j" class="order-info-date-course">
+                        <!-- <span>{{course.name}} x{{course.count}}</span> -->
                         <span>{{course.name}}</span>
-                        <span>￥{{course.price}}</span>
+                        <span>￥{{course.price * course.count}}</span>
                     </div>
                 </div>
                 <div class="order-info-date-price"><span>小计：</span><span>￥{{dateObj.datePrice}}</span></div>
@@ -46,7 +47,7 @@ import { mapState } from "vuex"
         },
         methods: {
             onTapConfirm() {
-                const now = new Date() 
+                const now = new Date()
                 if (!(now.getHours() >= 8 && now.getHours() < 16)) {
                     uni.showModal({
                         title: "提示",
@@ -136,8 +137,7 @@ import { mapState } from "vuex"
                     }).then(data => {
                         console.log(data)
                         uni.hideLoading();
-                        const result = data.data
-                        if (result) {
+                        if (data.data) {
                             uni.showToast({
                                 icon: "success",
                                 title: "订单提交成功",
@@ -162,7 +162,6 @@ import { mapState } from "vuex"
             }
         },
 		onLoad() {
-            console.log(this.globalOrderList)
             const courseList = JSON.parse(JSON.stringify(this.globalOrderList))
             courseList.sort((order1, order2) => {
                 if (order1.date === order2.date) {
@@ -184,8 +183,7 @@ import { mapState } from "vuex"
                 const sizeStr = course.size ? "(小份)" : (course.mealType > 1 ? "(大份)" : "")
                 course = {
                     ...course,
-                    name: `${mealTypeStr}餐 (套餐${courseStr}) ${sizeStr}`,
-                    price: course.mealType === 1 ? 5 : (course.size % 2 === 0 ? 15 : 14)
+                    name: `${mealTypeStr}餐 (套餐${courseStr}) ${sizeStr}`
                 }
                 if (dateMap.get(`${course.date}`) == null) dateMap.set(`${course.date}`, [])
                 dateMap.get(`${course.date}`).push(course)

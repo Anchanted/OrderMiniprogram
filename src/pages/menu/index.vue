@@ -6,7 +6,7 @@
             <div v-for="(weekday, i) in weekdayList" :key="i" class="navbar-item-container">
                 <div class="navbar-item" :class="navbarActiveIndex === i ? 'navbar-item-active' : ''" :data-navbar-index="i" @tap="onNavBarTap">
                     <span :style="{ color: (i === (selectedDate.getDay() == 0 ? 7 : selectedDate.getDay()) - 1) ? 'red' : '' }">{{weekday}}</span>
-                    <div v-if="orderedCountList[i] > 0" class="navbar-item-badge">{{orderedCountList[i]}}</div>
+                    <div v-if="weekdayOrderCount(i) > 0" class="navbar-item-badge">{{weekdayOrderCount(i)}}</div>
                 </div>
             </div>
         </div>
@@ -32,15 +32,15 @@
                                             <div v-if="course.display" class="course-select-area">
                                                 <div class="iconfont course-select-icon-container" @tap="onTapCourse($event, i, j, k, 0)">
                                                     <span class="iconfont course-select-icon" 
-                                                        :class="orderedMap.get(`${i}${j}`) === k * 2 ? 'icon-selected' : 'icon-select'"
-                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 ? '#09BB07' : '' }"></span>
+                                                        :class="menuList[i][j][k].sizeList[0].count ? 'icon-selected' : 'icon-select'"
+                                                        :style="{ color: menuList[i][j][k].sizeList[0].count ? '#09BB07' : '' }"></span>
                                                     <span v-if="j > 0">大</span>
                                                     <span v-else style="width: 16px;"></span>
                                                 </div>
                                                 <div v-if="j > 0" class="iconfont course-select-icon-container" @tap="onTapCourse($event, i, j, k, 1)">
                                                     <span class="iconfont course-select-icon" 
-                                                        :class="orderedMap.get(`${i}${j}`) === k * 2 + 1 ? 'icon-selected' : 'icon-select'"
-                                                        :style="{ color: orderedMap.get(`${i}${j}`) === k * 2 + 1 ? '#09BB07' : '' }"></span>
+                                                        :class="menuList[i][j][k].sizeList[1].count ? 'icon-selected' : 'icon-select'"
+                                                        :style="{ color: menuList[i][j][k].sizeList[1].count ? '#09BB07' : '' }"></span>
                                                     <span>小</span>
                                                 </div>
                                             </div>
@@ -108,8 +108,6 @@ import { mapState } from "vuex"
                     [null, null],
                     [null, null]
                 ],
-                orderedMap: new Map(),
-                orderedCountList: [0, 0, 0, 0, 0, 0, 0],
                 totalPrice: 0,
                 menuList: []
 			}
@@ -119,7 +117,10 @@ import { mapState } from "vuex"
                 user: state => state.user
             }),
             hasOrder() {
-                return this.orderedCountList.reduce((acc, current) => acc += current, 0) > 0
+                return this.menuList.flat(4).flatMap(course => course.sizeList || []).reduce((acc, size) => acc += size.count, 0) > 0
+            },
+            weekdayOrderCount() {
+                return (i) => !this.menuList.length ? 0 : this.menuList[i].flat(4).flatMap(course => course.sizeList || []).reduce((acc, size) => acc += size.count, 0)
             }
         },
 		methods: {
@@ -133,42 +134,21 @@ import { mapState } from "vuex"
             },
 
             onTapCourse(event, i, j, k, sizeIndex) {
-                if (this.orderedMap.get(`${i}${j}`) == null) {
-                    if (this.orderedMap.size < 3) this.orderedMap.set(`${i}${j}`, k * 2 + sizeIndex)
-                    else {
-                        uni.showToast({
-                            icon: "none",
-                            title: "最多只能点三种套餐",
-                            duration: 2000
-                        });
-                    }
-                } else if (this.orderedMap.get(`${i}${j}`) !== k * 2 + sizeIndex) {
-                    this.orderedMap.set(`${i}${j}`, k * 2 + sizeIndex)
-                } else {
-                    this.orderedMap.delete(`${i}${j}`)
-                }
-                // console.log(this.orderedMap)
+                this.menuList[i][j].forEach(course => {
+                    if (!course.sizeList) return
+                    course.sizeList.forEach(size => size.count = 0)
+                })
+                if (this.menuList[i][j][k].sizeList && this.menuList[i][j][k].sizeList[sizeIndex].count === 0) this.menuList[i][j][k].sizeList[sizeIndex].count = 1
 
                 this.updateOrder()
             },
 
             updateOrder() {
-                let price = 0
-                const orderedCountList = [0, 0, 0, 0, 0]
-                this.orderedMap.forEach((value, key) => {
-                    if (parseInt(key.charAt(1)) === 0) {
-                        price += 5
-                    } else {
-                        price += value % 2 === 0 ? 15 : 14
-                    }
-                    if (parseInt(key.charAt(0)) < orderedCountList.length) orderedCountList[parseInt(key.charAt(0))]++
-                })
-                this.totalPrice = price
-                this.orderedCountList = orderedCountList
+                this.totalPrice = this.menuList.flat(4).flatMap(course => course.sizeList || []).reduce((acc, size) => acc += size.price * size.count, 0)
             },
 
             onTapClear() {
-                this.orderedMap.clear()
+                this.menuList.flat(4).flatMap(course => course.sizeList || []).forEach(size => size.count = 0)
                 this.updateOrder()
             },
 
@@ -176,21 +156,17 @@ import { mapState } from "vuex"
                 if (!this.hasOrder) return
 
                 const orderList = []
-                this.orderedMap.forEach((value, key) => {
-                    const weekdayIndex = +key.charAt(0)
-                    const mealTypeIndex = +key.charAt(1)
-                    const courseTypeIndex = Math.floor(value / 2)
-                    const size = value - courseTypeIndex * 2
-
-                    const courseObj = {
-                        ...this.menuList[weekdayIndex][mealTypeIndex][courseTypeIndex],
-                        date: this.menuList[weekdayIndex][mealTypeIndex][courseTypeIndex].etime,
-                        weekday: weekdayIndex + 1,
-                        mealType: mealTypeIndex + 1,
-                        courseType: courseTypeIndex + 1,
-                        size
-                    }
-                    orderList.push(courseObj)
+                this.menuList.flat(4).forEach(course => {
+                    if (!course.sizeList) return
+                    course.sizeList.forEach((size, i) => {
+                        if (!size.count) return
+                        const courseObj = {
+                            ...course,
+                            ...size,
+                            size: i
+                        }
+                        orderList.push(courseObj)
+                    })
                 })
 
                 this.$store.commit("setOrderList", orderList)
@@ -202,9 +178,7 @@ import { mapState } from "vuex"
         },
 
         async onPullDownRefresh() {
-            this.orderedMap = new Map()
-            this.orderedCountList = [0, 0, 0, 0, 0, 0, 0]
-            this.totalPrice = 0
+            this.onTapClear()
 
             const now = new Date()
             const hour = now.getHours()
@@ -227,11 +201,7 @@ import { mapState } from "vuex"
             }
             // console.log(selectedDate)
             this.selectedDate = selectedDate
-            // uni.showToast({
-            //     icon: "none",
-            //     title: this.selectedDate.toString(),
-            //     duration: 10000
-            // })
+
             const selectedWeekday = this.selectedDate.getDay() == 0 ? 7 : this.selectedDate.getDay()
 
             this.navbarActiveIndex = selectedWeekday - 1
@@ -240,7 +210,6 @@ import { mapState } from "vuex"
             const sunday = new Date(this.selectedDate.getTime() + (7 - selectedWeekday) * 24 * 3600 * 1000)
 
             this.weekDateStr = `${monday.pattern("yyyy.MM.dd")} - ${sunday.pattern("yyyy.MM.dd")}（今 ${now.pattern("yyyy.MM.dd")}）`
-            // this.weekDateStr = `（今 ${now.pattern("yyyy.MM.dd HH")}） ${this.selectedDate.pattern("yyyy-MM-dd")}`
 
             const menuList = []
             for (let i = 0; i < 7; i++) {
@@ -279,7 +248,7 @@ import { mapState } from "vuex"
                 courseList.forEach(course => {
                     const weekday = course.weekId
                     const mealType = Math.floor((course.typeId - 1) / 2) + 1
-                    const courseIndex = (course.typeId - 1) % 2
+                    const courseTypeIndex = (course.typeId - 1) % 2
                     
                     const dishList = []
                     for (let key in course) {
@@ -287,16 +256,38 @@ import { mapState } from "vuex"
                             dishList.push(course[key].trim().replace(/[\r\n]/g, ""))
                         }
                     }
+
+                    const sizeList = []
+                    if (mealType === 1) {
+                        sizeList.push({
+                            price: 5,
+                            count: 0
+                        })
+                    } else {
+                        sizeList.push({
+                            price: 15,
+                            count: 0
+                        })
+                        sizeList.push({
+                            price: 14,
+                            count: 0
+                        })
+                    }
                     
-                    menuList[weekday - 1][mealType - 1][courseIndex] = {
+                    menuList[weekday - 1][mealType - 1][courseTypeIndex] = {
                         ...course,
-                        ...menuList[weekday - 1][mealType - 1][courseIndex],
+                        ...menuList[weekday - 1][mealType - 1][courseTypeIndex],
+                        date: course.etime,
+                        weekday,
+                        mealType,
+                        courseType: courseTypeIndex + 1,
+                        sizeList,
                         dishList,
                         // display: selectedWeekday == weekday && (hour >= 8 && hour < 16)
                         display: false
                     }
                 })
-                // console.log(menuList)
+                console.log(menuList)
                 this.menuList = JSON.parse(JSON.stringify(menuList))
 
                 if (this.user.id) {
@@ -362,9 +353,6 @@ import { mapState } from "vuex"
                 wx.hideHomeButton();  
             }  
             // #endif
-        },
-        
-        watch: {
         }
 	}
 </script>

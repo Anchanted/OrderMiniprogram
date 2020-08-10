@@ -1,7 +1,7 @@
 <script>
 	export default {
 		async onLaunch() {
-			// console.log('App Launch')
+			console.log('App Launch')
 
 			//#ifdef MP-WEIXIN  
 			if (wx.canIUse('getUpdateManager')) {
@@ -40,6 +40,7 @@
 			//#endif
 
 			const user = uni.getStorageSync("user")
+			console.log(user)
             if (user && user.username && user.password) {
 				try {
 					const data = await this.request({
@@ -54,12 +55,22 @@
 						}
 					})
 					console.log(data)
-					if (!data.data) {
+					if (data.data && JSON.stringify(data.data) !== "{}") {
+						this.$store.commit("setUser", user)
+						if (!data.data.password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z0-9]{12,20}$/g)) {
+							uni.reLaunch({
+								url: "/pages/user/password?change=1"
+							})
+						}
+					} else {
+						uni.showToast({
+							icon: "none",
+							title: "here",
+							duration: 2000
+						});
 						uni.reLaunch({
 							url: "/pages/login/index"
 						})
-					} else {
-						this.$store.commit("setUser", user)
 					}
 				} catch (error) {
 					console.log(error)
@@ -72,7 +83,7 @@
             }
 		},
 		onShow() {
-			// console.log('App Show')
+			console.log('App Show')
 			//#ifdef MP-WEIXIN  
 			if(wx.hideHomeButton){  
 				wx.hideHomeButton();  

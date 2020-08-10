@@ -9,7 +9,7 @@ const mixin = {
     },
     computed: {
         nowDate() {
-            const fakeDateStr = "2020-08-04T13:"
+            const fakeDateStr = "2020-08-07T13:"
             const now = new Date()
             const fakeISODate = new Date(`${fakeDateStr}${now.pattern("mm:ss")}Z`)
             const fakeDate = new Date(fakeISODate.getTime() + fakeISODate.getTimezoneOffset() * 60 * 1000)
@@ -25,10 +25,11 @@ const mixin = {
                     data,
                     header,
                     success: (res) => {
-                        if (res.data && res.data.data)
+                        if (res.statusCode === 200) {
                             resolve(res.data)
-                        else
-                            reject(res.msg)
+                        } else {
+                            reject(res.data)
+                        }
                     },
                     fail: (err) => {
                         reject(err)

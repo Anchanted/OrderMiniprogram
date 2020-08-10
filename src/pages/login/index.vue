@@ -5,7 +5,7 @@
         <!-- <image class="title" src="/static/image/4.png"></image> -->
         <div class="title title-zh">宾馆点餐</div>
         <div class="title title-en">Hotel Order</div>
-        <!-- <div class="error" v-if="hasError">用户名或密码错误</div> -->
+        <div class="error" v-if="errMsg">{{errMsg}}</div>
         <div class="form-item telephone-input">
             <image class="input-icon" src="/static/image/phone.png"></image>
             <input class="form-input" type="text" placeholder="请输入手机号" @input="onTelephoneInput" />
@@ -38,7 +38,7 @@ export default {
             telephone: "",
             password: "",
             agreementChecked: false,
-            hasError: false
+            errMsg: ""
         }
     },
 
@@ -57,7 +57,7 @@ export default {
             //         duration:2000,
             //     })
             } else {
-                this.hasError = false
+                this.errMsg = ""
 
                 uni.showLoading({
                     title: "加载中"
@@ -76,12 +76,13 @@ export default {
                 }).then(data => {
                     console.log(data)
                     uni.hideLoading()
-                    if (data.data && data.data.roleId !== 1) {
+                    console.log()
+                    if (data.data && JSON.stringify(data.data) !== "{}" && data.data.roleId !== 1) {
                         uni.setStorageSync("user", data.data)
                         this.$store.commit("setUser", data.data)
-                        if (!this.password.match(/^[a-zA-Z0-9]{12,20}$/g)) {
+                        if (!this.password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z0-9]{12,20}$/g)) {
                             uni.navigateTo({
-                                url: "/pages/user/password"
+                                url: "/pages/user/password?change=1"
                             })
                         } else {
                             uni.reLaunch({
@@ -89,11 +90,12 @@ export default {
                             })
                         }
                     } else {
-                        this.hasError = true
+                        this.errMsg = "用户名或密码错误"
                     }
                 }).catch(err => {
                     console.log(err)
                     uni.hideLoading()
+                    this.errMsg = "登录出错，请重试"
                 })
             }
         },
