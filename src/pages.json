@@ -39,15 +39,21 @@
 			}
 		},
 		{
-			"path": "pages/order/department",
+			"path": "pages/order/department/daily",
 			"style": {
-				"navigationBarTitleText": "部门历史订餐统计"
+				"navigationBarTitleText": "部门每日订餐详情"
 			}
 		},
 		{
-			"path": "pages/index/index",
+			"path": "pages/order/department/daily2",
 			"style": {
-				"navigationBarTitleText": "uni-app"
+				"navigationBarTitleText": "部门每日订餐详情2"
+			}
+		},
+		{
+			"path": "pages/order/department/price",
+			"style": {
+				"navigationBarTitleText": "部门历史订餐账单"
 			}
 		}
 	],

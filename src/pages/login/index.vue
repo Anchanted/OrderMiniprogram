@@ -8,7 +8,7 @@
         <div class="error" v-if="errMsg">{{errMsg}}</div>
         <div class="form-item telephone-input">
             <image class="input-icon" src="/static/image/phone.png"></image>
-            <input class="form-input" type="text" placeholder="请输入手机号" @input="onTelephoneInput" />
+            <input class="form-input" type="text" placeholder="请输入微信号（手机号）" @input="onTelephoneInput" />
         </div>
         <div class="form-item password-input">
             <image class="input-icon" src="/static/image/lock.png"></image>

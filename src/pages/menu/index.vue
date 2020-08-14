@@ -1,11 +1,11 @@
 <template>
 	<div class="menu-container">
-        <div class="notification">当前工作日订餐时间为上个工作日的8:00至16:00</div>
+        <div class="notification">当前工作日餐品的订餐截止时间为上个工作日的16:00</div>
         <div class="week-date">{{weekDateStr}}</div>
         <div class="navbar">
             <div v-for="(weekday, i) in weekdayList" :key="i" class="navbar-item-container">
                 <div class="navbar-item" :class="navbarActiveIndex === i ? 'navbar-item-active' : ''" :data-navbar-index="i" @tap="onNavBarTap">
-                    <span :style="{ color: (i === (selectedDate.getDay() == 0 ? 7 : selectedDate.getDay()) - 1) ? 'red' : '' }">{{weekday}}</span>
+                    <span :style="{ color: (i === (selectedDate.getDay() === 0 ? 7 : selectedDate.getDay()) - 1) ? 'red' : '' }">{{weekday}}</span>
                     <div v-if="weekdayOrderCount(i) > 0" class="navbar-item-badge">{{weekdayOrderCount(i)}}</div>
                 </div>
             </div>
@@ -24,33 +24,32 @@
 
                                 <div class="meal-content-container">
                                     <div v-for="(course, k) in menuList[i][j]" :key="k" class="course-container">
-                                        <span class="course-title">{{course.name}}</span>
+                                        <span class="course-title">{{`套餐${String.fromCharCode("A".charCodeAt() + k)}`}}</span>
                                         <div v-if="course.dishList.length" class="course-content">
                                             <div class="course-dish">
                                                 <span v-for="(dish, n) in course.dishList" :key="n">{{dish}}</span>
                                             </div>
                                             <div v-if="course.display" class="course-select-area">
-                                                <div class="iconfont course-select-icon-container" @tap="onTapCourse($event, i, j, k, 0)">
+                                                <div class="course-select-icon-container" @tap="onTapCourse($event, i, j, k, 0)">
                                                     <span class="iconfont course-select-icon" 
                                                         :class="menuList[i][j][k].sizeList[0].count ? 'icon-selected' : 'icon-select'"
                                                         :style="{ color: menuList[i][j][k].sizeList[0].count ? '#09BB07' : '' }"></span>
                                                     <span v-if="j > 0">大</span>
                                                     <span v-else style="width: 16px;"></span>
                                                 </div>
-                                                <div v-if="j > 0" class="iconfont course-select-icon-container" @tap="onTapCourse($event, i, j, k, 1)">
+                                                <div v-if="j > 0" class="course-select-icon-container" @tap="onTapCourse($event, i, j, k, 1)">
                                                     <span class="iconfont course-select-icon" 
                                                         :class="menuList[i][j][k].sizeList[1].count ? 'icon-selected' : 'icon-select'"
                                                         :style="{ color: menuList[i][j][k].sizeList[1].count ? '#09BB07' : '' }"></span>
                                                     <span>小</span>
                                                 </div>
                                             </div>
-                                            <div v-else-if="i === (selectedDate.getDay() == 0 ? 7 : selectedDate.getDay()) - 1" class="course-select-area">
-                                                <div v-if="selectedDateOrder[j][k] != null" class="iconfont course-select-icon-container">
+                                            <div v-else-if="course.order != null" class="course-select-area">
+                                                <div class="course-select-icon-container">
                                                     <span class="iconfont icon-selected course-select-icon" style="color: #888888;"></span>
-                                                    <span v-if="j > 0">{{selectedDateOrder[j][k] ? "小" : "大"}}</span>
+                                                    <span v-if="j > 0">{{course.order === 0 ? "大" : "小"}}</span>
                                                     <span v-else style="width: 16px;"></span>
                                                 </div>
-                                                <div v-else style="width: 100%; height: 50px;"></div>
                                             </div>
                                             <div v-else style="width: 100%; height: 50px;"></div>
                                         </div>
@@ -83,6 +82,23 @@ import { mapState } from "vuex"
 
 	export default {
 		data() {
+            const emptyMenuList = []
+            for (let i = 0; i < 7; i++) {
+                const weekday = []
+                for (let j = 0; j < 3; j++) {
+                    const mealType = []
+                    for (let k = 0; k < 2; k++) {
+                        const course = {
+                            dishList: [],
+                            display: false
+                        }
+                        mealType.push(course)
+                    }
+                    weekday.push(mealType)
+                }
+                emptyMenuList.push(weekday)
+            }
+            
 			return {
                 weekdayList: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
                 weekDateStr: "",
@@ -101,15 +117,11 @@ import { mapState } from "vuex"
                         price: "大份15元\n小份14元"
                     }
                 ],
-
                 selectedDate: new Date(),
-                selectedDateOrder: [
-                    [null, null],
-                    [null, null],
-                    [null, null]
-                ],
                 totalPrice: 0,
-                menuList: []
+                menuList: JSON.parse(JSON.stringify(emptyMenuList)),
+                emptyMenuList,
+                pageHidden: false
 			}
         },
         computed: {
@@ -134,11 +146,23 @@ import { mapState } from "vuex"
             },
 
             onTapCourse(event, i, j, k, sizeIndex) {
-                this.menuList[i][j].forEach(course => {
+                const flag = this.menuList.some((mealTypeList, weekdayIndex) => mealTypeList.flat(4).flatMap(course => course.sizeList || []).some(size => weekdayIndex != i && size.count))
+                if (flag) {
+                    uni.showToast({
+                        icon: "none",
+                        title: "一份订单只能选择同一天的菜品",
+                        duration: 2000
+                    })
+                    return
+                }
+
+                this.menuList[i][j].forEach((course, m) => {
                     if (!course.sizeList) return
-                    course.sizeList.forEach(size => size.count = 0)
+                    course.sizeList.forEach((size, n) => {
+                        if (m === k && n === sizeIndex) size.count = size.count === 0 ? 1 : 0
+                        else size.count = 0
+                    })
                 })
-                if (this.menuList[i][j][k].sizeList && this.menuList[i][j][k].sizeList[sizeIndex].count === 0) this.menuList[i][j][k].sizeList[sizeIndex].count = 1
 
                 this.updateOrder()
             },
@@ -181,28 +205,35 @@ import { mapState } from "vuex"
             this.onTapClear()
 
             const now = new Date()
-            const hour = now.getHours()
             // uni.setNavigationBarTitle({
             //     title: `选餐（今 ${now.pattern("yyyy年MM月dd日")}）`
             // })
-
             const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
-            let selectedDate = now
+            const todayISODate = new Date(`${now.pattern("yyyy-MM-dd")}T00:00:00Z`)
+            const todayLocalDate = new Date(todayISODate.getTime() + todayISODate.getTimezoneOffset() * 60 * 1000)
+
+            let selectedDate = todayLocalDate
+            let threshold = todayLocalDate
             if (todayIndex != null) {
                 if (DateList[todayIndex]["type"] == 0 && now.getHours() < 8) {
-                    selectedDate = now
+                    selectedDate = todayLocalDate
                 } else {
-                    const nextDay = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
-                    if (nextDay) {
-                        const ISODate = new Date(`${nextDay["dayStr"]}T${now.pattern("HH:mm:ss")}Z`)
-                        selectedDate = new Date(ISODate.getTime() + ISODate.getTimezoneOffset() * 60 * 1000)
+                    const nextWorkday = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
+                    if (nextWorkday) {
+                        const nextWorkdayISODate = new Date(`${nextWorkday["dayStr"]}T00:00:00Z`)
+                        selectedDate = new Date(nextWorkdayISODate.getTime() + nextWorkdayISODate.getTimezoneOffset() * 60 * 1000)
                     }
                 }
+                const selectedDateIndex = DateList.findIndex(day => selectedDate.pattern("yyyy-MM-dd") === day["dayStr"])
+                const lastWorkday = DateList.slice(0, selectedDateIndex).reverse().find(day => day["type"] === 0)
+                if (lastWorkday) {
+                    const lastWorkdayISODate = new Date(`${lastWorkday["dayStr"]}T16:00:00Z`)
+                    threshold = new Date(lastWorkdayISODate.getTime() + lastWorkdayISODate.getTimezoneOffset() * 60 * 1000)
+                }
             }
-            // console.log(selectedDate)
             this.selectedDate = selectedDate
 
-            const selectedWeekday = this.selectedDate.getDay() == 0 ? 7 : this.selectedDate.getDay()
+            const selectedWeekday = this.selectedDate.getDay() === 0 ? 7 : this.selectedDate.getDay()
 
             this.navbarActiveIndex = selectedWeekday - 1
 
@@ -211,25 +242,7 @@ import { mapState } from "vuex"
 
             this.weekDateStr = `${monday.pattern("yyyy.MM.dd")} - ${sunday.pattern("yyyy.MM.dd")}（今 ${now.pattern("yyyy.MM.dd")}）`
 
-            const menuList = []
-            for (let i = 0; i < 7; i++) {
-                const weekday = []
-                for (let j = 0; j < 3; j++) {
-                    const mealType = []
-                    for (let k = 0; k < 2; k++) {
-                        const course = {
-                            name: `套餐${String.fromCharCode("A".charCodeAt() + k)}`,
-                            dishList: [],
-                            display: false
-                        }
-                        mealType.push(course)
-                    }
-                    weekday.push(mealType)
-                }
-                menuList.push(weekday)
-            }
-            this.menuList = menuList
-
+            const menuList = JSON.parse(JSON.stringify(this.emptyMenuList))
             try {
                 const data = await this.request({
                     url: "/Food",
@@ -282,56 +295,11 @@ import { mapState } from "vuex"
                         mealType,
                         courseType: courseTypeIndex + 1,
                         sizeList,
-                        dishList,
-                        // display: selectedWeekday == weekday && (hour >= 8 && hour < 16)
-                        display: false
+                        dishList
                     }
                 })
                 console.log(menuList)
-                this.menuList = JSON.parse(JSON.stringify(menuList))
-
-                if (this.user.id) {
-                    this.request({
-                        url: "/FoodData/ById",
-                        method: "GET",
-                        data: {
-                            userId: this.user.id,
-                            timeStart: `${this.selectedDate.pattern("yyyy-MM-dd")} 00:00:00`,
-                            timeEnd: `${this.selectedDate.pattern("yyyy-MM-dd")} 00:00:00`
-                        }
-                    }).then(data => {
-                        console.log(data)
-                        const order = data.data.find(order => !order.mark)
-                        if (order) {
-                            const selectedDateOrder = JSON.parse(JSON.stringify(this.selectedDateOrder))
-                            for (let key in order) {
-                                if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
-                                    if (order[key]) {
-                                        const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
-                                        const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
-                                        const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
-                                        selectedDateOrder[mealType - 1][courseType - 1] = size
-                                    }
-                                }
-                            }
-                            this.selectedDateOrder = selectedDateOrder
-                            console.log(this.selectedDateOrder)
-                        } else {
-                            for (let j = 0; j < 3; j++) {
-                                for (let k = 0; k < 2; k++) {
-                                    this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
-                                }
-                            }
-                        }
-                    }).catch(err => {
-                        console.log(err)
-                        for (let j = 0; j < 3; j++) {
-                            for (let k = 0; k < 2; k++) {
-                                this.menuList[selectedWeekday - 1][j][k].display = (hour >= 8 && hour < 16)
-                            }
-                        }
-                    })
-                }
+                this.menuList = menuList
             } catch (error) {
                 console.log(error)
                 uni.stopPullDownRefresh()
@@ -340,19 +308,69 @@ import { mapState } from "vuex"
                     title: "获取菜单失败，请重试",
                     duration: 2000
                 });
+                return
             }
+
+            const userId = this.user.id || uni.getStorageSync("user").id
+            if (!userId) return
+
+            this.request({
+                url: "/FoodData/ById",
+                method: "GET",
+                data: {
+                    userId: userId,
+                    timeStart: `${monday.pattern("yyyy-MM-dd")} 00:00:00`,
+                    timeEnd: `${sunday.pattern("yyyy-MM-dd")} 00:00:00`
+                }
+            }).then(data => {
+                console.log(data)
+                for (let i = 0; i < 7; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        for (let k = 0; k < 2; k++) {
+                            this.menuList[i][j][k].display = (i > selectedWeekday - 1) || (i === (selectedWeekday - 1) && now < threshold)
+                        }
+                    }
+                }
+
+                data.data.filter(order => !order.mark).forEach(order => {
+                    const ISODate = new Date(`${order.dataTime.trim().replace(/[\r\n]/g, "").replace(" ", "T")}Z`)
+                    const localDate = new Date(ISODate.getTime() + ISODate.getTimezoneOffset() * 60 * 1000)
+                    const weekdayIndex = (localDate.getDay() === 0 ? 7 : localDate.getDay()) - 1
+
+                    this.menuList[weekdayIndex].flat(4).forEach(course => course.display = false)
+
+                    for (let key in order) {
+                        if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
+                            if (order[key]) {
+                                const mealType = RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3)
+                                const courseType = RegExp.$2.toUpperCase().charCodeAt() - 'A'.charCodeAt() + 1
+                                const size = !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1)
+                                this.menuList[weekdayIndex][mealType - 1][courseType - 1].order = size
+                            }
+                        }
+                    }
+                })
+            }).catch(err => {
+                console.log(err)
+                for (let j = 0; j < 3; j++) {
+                    for (let k = 0; k < 2; k++) {
+                        this.menuList[i][j][k].display = (i > selectedWeekday - 1) || (i === (selectedWeekday - 1) && now < threshold)
+                    }
+                }
+            })
         },
 
         onLoad() {
             uni.startPullDownRefresh()
         },
 
-        onShow() {
-            // #ifdef MP-WEIXIN  
-            if(wx.hideHomeButton){  
-                wx.hideHomeButton();  
-            }  
-            // #endif
+        onHide() {
+            this.pageHidden = true
+        },
+
+        onTabItemTap(e) {
+            if (!this.pageHidden) uni.startPullDownRefresh()
+            else this.pageHidden = false
         }
 	}
 </script>

@@ -22,12 +22,14 @@
         <div class="total-price-container">
             <span>总计：</span><span>￥{{totalPrice}}</span>
         </div>
-        <div class="notice">*订餐确认后，当天16:00前可取消，当天16:00后不可取消</div>
+        <div class="notice">*订餐确认后，此工作日套餐订单可在其上个工作日16:00前取消，逾期无法取消</div>
         <button class="confirm-button" type="primary" @tap="onTapConfirm">确认订单</button>
     </div>
 </template>
 
 <script>
+import DateList from "@/static/json/weekday.json"
+
 import { mapState } from "vuex"
 
 	export default {
@@ -47,11 +49,39 @@ import { mapState } from "vuex"
         },
         methods: {
             onTapConfirm() {
+                const order = this.dateOrderList[0]
+
                 const now = new Date()
-                if (!(now.getHours() >= 8 && now.getHours() < 16)) {
+                const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
+                const todayISODate = new Date(`${now.pattern("yyyy-MM-dd")}T00:00:00Z`)
+                const todayLocalDate = new Date(todayISODate.getTime() + todayISODate.getTimezoneOffset() * 60 * 1000)
+
+                let selectedDate = todayLocalDate
+                let threshold = todayLocalDate
+                if (todayIndex != null) {
+                    if (DateList[todayIndex]["type"] == 0 && now.getHours() < 8) {
+                        selectedDate = todayLocalDate
+                    } else {
+                        const nextWorkday = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
+                        if (nextWorkday) {
+                            const nextWorkdayISODate = new Date(`${nextWorkday["dayStr"]}T00:00:00Z`)
+                            selectedDate = new Date(nextWorkdayISODate.getTime() + nextWorkdayISODate.getTimezoneOffset() * 60 * 1000)
+                        }
+                    }
+                    const selectedDateIndex = DateList.findIndex(day => selectedDate.pattern("yyyy-MM-dd") === day["dayStr"])
+                    const lastWorkday = DateList.slice(0, selectedDateIndex).reverse().find(day => day["type"] === 0)
+                    if (lastWorkday) {
+                        const lastWorkdayISODate = new Date(`${lastWorkday["dayStr"]}T16:00:00Z`)
+                        threshold = new Date(lastWorkdayISODate.getTime() + lastWorkdayISODate.getTimezoneOffset() * 60 * 1000)
+                    }
+                }
+                const orderISODate = new Date(`${order.date.trim().replace(/[\r\n]/g, "").replace(" ", "T")}Z`)
+                const orderLocalDate = new Date(orderISODate.getTime() + orderISODate.getTimezoneOffset() * 60 * 1000)
+                
+                if (!((orderLocalDate - selectedDate >= 1 * 24 * 60 * 60 * 1000) || (orderLocalDate >= selectedDate && now < threshold))) {
                     uni.showModal({
                         title: "提示",
-                        content: "当前时间不在订餐时间范围内，请在8:00至16:00订餐",
+                        content: "此日餐品订餐时间已截止，请在预定餐品所在工作日的上一个工作日16:00前提交订单",
                         showCancel: false,
                         success: function({ confirm }) {
                             if (confirm) {

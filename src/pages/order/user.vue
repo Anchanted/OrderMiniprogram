@@ -1,7 +1,10 @@
 <template>
-    <view class="order-user-page">
-        <div v-if="orderList.length" class="order-list-container">
-            <div v-for="(order, i) in orderList" :key="i" class="order-container">
+    <div class="order-user-page">
+        <div class="order-type-select">
+            <div v-for="(type, index) in typeList" :key="index" :class="selectedTypeIndex === index ? 'selected' : ''" @tap="onTapType(index)">{{type}}</div>
+        </div>
+        <div v-if="displayList.length" class="order-list-container">
+            <div v-for="(order, i) in displayList" :key="i" class="order-container">
                 <div class="order-header">
                     <span class="order-date-text">{{order.date}}</span>
                     <span class="order-status-text">{{order.cancelTime ? "已取消" : "已下单"}}</span>
@@ -30,7 +33,7 @@
         <div v-else class="order-none">
             您还没有任何订单
         </div>
-    </view>
+    </div>
 </template>
 
 <script>
@@ -42,7 +45,10 @@ import { mapState } from "vuex"
 		data() {
 			return {
                 orderList: [],
-                orderCanceled: false
+                displayList: [],
+                orderCanceled: false,
+                typeList: ["全部", "已下单", "已取消"],
+                selectedTypeIndex: 0
 			}
         },
         computed: {
@@ -52,25 +58,42 @@ import { mapState } from "vuex"
             checkDate() {
                 return (i) => {
                     const order = this.orderList[i]
+
                     const now = new Date()
                     const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
-                    let selectedDate = now
+                    const todayISODate = new Date(`${now.pattern("yyyy-MM-dd")}T00:00:00Z`)
+                    const todayLocalDate = new Date(todayISODate.getTime() + todayISODate.getTimezoneOffset() * 60 * 1000)
+
+                    let selectedDate = todayLocalDate
+                    let threshold = todayLocalDate
                     if (todayIndex != null) {
                         if (DateList[todayIndex]["type"] == 0 && now.getHours() < 8) {
-                            selectedDate = now
+                            selectedDate = todayLocalDate
                         } else {
-                            const nextDay = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
-                            if (nextDay) {
-                                const ISODate = new Date(`${nextDay["dayStr"]}T${now.pattern("HH:mm:ss")}Z`)
-                                selectedDate = new Date(ISODate.getTime() + ISODate.getTimezoneOffset() * 60 * 1000)
+                            const nextWorkday = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
+                            if (nextWorkday) {
+                                const nextWorkdayISODate = new Date(`${nextWorkday["dayStr"]}T00:00:00Z`)
+                                selectedDate = new Date(nextWorkdayISODate.getTime() + nextWorkdayISODate.getTimezoneOffset() * 60 * 1000)
                             }
                         }
+                        const selectedDateIndex = DateList.findIndex(day => selectedDate.pattern("yyyy-MM-dd") === day["dayStr"])
+                        const lastWorkday = DateList.slice(0, selectedDateIndex).reverse().find(day => day["type"] === 0)
+                        if (lastWorkday) {
+                            const lastWorkdayISODate = new Date(`${lastWorkday["dayStr"]}T16:00:00Z`)
+                            threshold = new Date(lastWorkdayISODate.getTime() + lastWorkdayISODate.getTimezoneOffset() * 60 * 1000)
+                        }
                     }
-                    return selectedDate.pattern("yyyy-MM-dd") === order.date && (now.getHours() >= 8 && now.getHours() < 16)
+                    const orderISODate = new Date(`${order.date}T00:00:00Z`)
+                    const orderLocalDate = new Date(orderISODate.getTime() + orderISODate.getTimezoneOffset() * 60 * 1000)
+                    return (orderLocalDate - selectedDate >= 1 * 24 * 60 * 60 * 1000) || (orderLocalDate >= selectedDate && now < threshold)
                 }
             }
         },
         methods: {
+            onTapType(index) {
+                if (this.selectedTypeIndex === index) return
+                this.selectedTypeIndex = index
+            },
             onTapCancelOrder(e, id) {
                 uni.showLoading({
                     title: "加载中"
@@ -104,6 +127,22 @@ import { mapState } from "vuex"
                         duration:2000,
                     })
                 })
+            },
+            changeDisplayList(selectedTypeIndex) {
+                switch (selectedTypeIndex) {
+                    case 0:
+                        this.displayList = this.orderList
+                        break;
+                    case 1:
+                        this.displayList = this.orderList.filter(order => !order.mark)
+                        break;
+                    case 2:
+                        this.displayList = this.orderList.filter(order => order.mark)
+                        break;
+                    default:
+                        this.displayList = this.orderList
+                        break;
+                }
             }
         },
 		onLoad() {
@@ -130,9 +169,10 @@ import { mapState } from "vuex"
                         if (key.match(/^(morning|noon|night)([a-z])(max|min)?$/i)) {
                             if (order[key]) {
                                 const mealTypeStr = RegExp.$1.toLowerCase() === "morning" ? "早" : (RegExp.$1.toLowerCase() === "noon" ? "午" : "晚")
+                                const courseTypeStr = RegExp.$2.toUpperCase()
                                 const sizeStr = !RegExp.$3 ? "" : (RegExp.$3.toLowerCase() === "max" ? "(大份)" : "(小份)")
                                 courseList.push({
-                                    name: `${mealTypeStr}餐 ${sizeStr}`,
+                                    name: `${mealTypeStr}餐 (套餐${courseTypeStr}) ${sizeStr}`,
                                     mealType: RegExp.$1.toLowerCase() === "morning" ? 1 : (RegExp.$1.toLowerCase() === "noon" ? 2 : 3),
                                     size: !RegExp.$3 ? 0 : (RegExp.$3.toLowerCase() === "max" ? 0 : 1),
                                     count: order[key],
@@ -158,6 +198,7 @@ import { mapState } from "vuex"
 
                 orderList.sort((a, b) => new Date(b.orderTime.replace(/\.|\-/g, '/')) - new Date(a.orderTime.replace(/\.|\-/g, '/')))
                 this.orderList = orderList
+                this.changeDisplayList(this.selectedTypeIndex)
             }).catch(err => {
                 console.log(err)
                 uni.stopPullDownRefresh()
@@ -169,7 +210,12 @@ import { mapState } from "vuex"
             })
         },
         watch: {
-            
+            selectedTypeIndex: {
+                immediate: true,
+                handler: function(val) {
+                    this.changeDisplayList(val)
+                }
+            }
         },
         onUnload() {
             if (this.orderCanceled) {
@@ -185,6 +231,29 @@ import { mapState } from "vuex"
     .order-user-page {
         width: 100%;
         height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        .order-type-select {
+            width: 700rpx;
+            padding: 10px 0 0;
+            display: flex;
+            align-items: center;
+
+            >div {
+                padding: 8px 10px;
+                border-radius: 50rpx;
+                background-color: #ffffff;
+                color: #888888;
+                margin-right: 30rpx;
+            }
+
+            .selected {
+                background-color: #09BB07;
+                color: #ffffff;
+            }
+        }
 
         .order-list-container {
             width: 100%;
