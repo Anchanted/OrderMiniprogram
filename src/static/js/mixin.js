@@ -7,7 +7,7 @@ const mixin = {
     },
     computed: {
         nowDate() {
-            const fakeDateStr = "2020-08-10T18:"
+            const fakeDateStr = "2020-08-08T23:"
             const now = new Date()
             const fakeISODate = new Date(`${fakeDateStr}${now.pattern("mm:ss")}Z`)
             const fakeDate = new Date(fakeISODate.getTime() + fakeISODate.getTimezoneOffset() * 60 * 1000)

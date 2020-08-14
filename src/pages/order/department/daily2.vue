@@ -8,49 +8,53 @@
             </picker>
         </div>
 
-        <div class="order-table-container">
-            <div class="order-table-title">{{`${user.stationName}订餐详情`}}</div>
+        <template v-if="hallList.length">
             <div class="order-table-selector">
                 <div v-for="(mealType, i) in mealTypeList" :key="i" 
                     :class="selectedMealTypeIndex === i ? 'selected' : ''"
                     @tap="onTapSelect($event, i)">{{mealType}}</div>
             </div>
-            <div class="table order-table">
-                <div class="thead">
-                    <div class="tr">
-                        <div class="th th-name">
-                            <div>姓名</div>
+
+            <div v-for="(hall, h) in hallList" :key="h" class="order-table-container">
+                <div class="order-table-title">{{user.stationName}}{{hall.hallName ? `(${hall.hallName})` : ""}}</div>
+                <div class="table order-table">
+                    <div class="thead">
+                        <div class="tr">
+                            <div class="th th-name">
+                                <div>姓名</div>
+                            </div>
+                            <div class="th" style="grid-column-start: span 2;">A</div>
+                            <div class="th top-right-cell" style="grid-column-start: span 2;">B</div>
+                            <template v-for="(n, i) in 2">
+                                <div class="th" :key="i" :style="{ 'grid-column-start': `span ${!selectedMealTypeIndex ? 2 : 1}` }">{{selectedMealTypeIndex === 0 ? "标准": "大"}}</div>
+                                <div class="th" v-if="selectedMealTypeIndex" :key="i">小</div>
+                            </template>
                         </div>
-                        <div class="th" style="grid-column-start: span 2;">A</div>
-                        <div class="th top-right-cell" style="grid-column-start: span 2;">B</div>
-                        <template v-for="(n, i) in 2">
-                            <div class="th" :key="i" :style="{ 'grid-column-start': `span ${!selectedMealTypeIndex ? 2 : 1}` }">{{selectedMealTypeIndex === 0 ? "标准": "大"}}</div>
-                            <div class="th" v-if="selectedMealTypeIndex" :key="i">小</div>
-                        </template>
+                    </div>
+                    <div class="tbody">
+                        <div class="tr" v-for="(order, i) in hall.orderList" :key="i">
+                            <div class="td">{{order.username}}</div>
+                            <template v-for="sizeList in order.mealTypeList[selectedMealTypeIndex]">
+                                <div class="td" 
+                                    v-for="size in sizeList" :key="size.key" 
+                                    :style="{'grid-column-start': `span ${!selectedMealTypeIndex ? 2 : 1}`, color: !size.count && 'transparent'}">{{size.count}}</div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="tfoot">
+                        <div class="tr">
+                            <div class="td">总计</div>
+                            <div class="td" :style="{ 'grid-column-start': `span ${!selectedMealTypeIndex ? 2 : 1}` }">{{hall.orderList.reduce((acc, order) => acc += order.mealTypeList[selectedMealTypeIndex][0][0].count, 0)}}</div>
+                            <div class="td" v-if="selectedMealTypeIndex">{{hall.orderList.reduce((acc, order) => acc += (order.mealTypeList[selectedMealTypeIndex][0][1] || 0).count, 0)}}</div>
+                            <div class="td" :style="{ 'grid-column-start': `span ${!selectedMealTypeIndex ? 2 : 1}` }">{{hall.orderList.reduce((acc, order) => acc += order.mealTypeList[selectedMealTypeIndex][1][0].count, 0)}}</div>
+                            <div class="td" v-if="selectedMealTypeIndex">{{hall.orderList.reduce((acc, order) => acc += (order.mealTypeList[selectedMealTypeIndex][1][1] || 0).count, 0)}}</div>
+                        </div>
                     </div>
                 </div>
-                <div class="tbody" v-if="orderList.length">
-                    <div class="tr" v-for="(order, i) in orderList" :key="i">
-                        <div class="td">{{order.username}}</div>
-                        <template v-for="sizeList in order.mealTypeList[selectedMealTypeIndex]">
-                            <div class="td" 
-                                v-for="size in sizeList" :key="size.key" 
-                                :style="{'grid-column-start': `span ${!selectedMealTypeIndex ? 2 : 1}`}">{{size.count}}</div>
-                        </template>
-                    </div>
-                </div>
-                <div class="tfoot" v-if="orderList.length">
-                    <div class="tr">
-                        <div class="td">总计</div>
-                        <div class="td" :style="{ 'grid-column-start': `span ${!selectedMealTypeIndex ? 2 : 1}` }">{{orderList.reduce((acc, order) => acc += order.mealTypeList[selectedMealTypeIndex][0][0].count, 0)}}</div>
-                        <div class="td" v-if="selectedMealTypeIndex">{{orderList.reduce((acc, order) => acc += (order.mealTypeList[selectedMealTypeIndex][0][1] || 0).count, 0)}}</div>
-                        <div class="td" :style="{ 'grid-column-start': `span ${!selectedMealTypeIndex ? 2 : 1}` }">{{orderList.reduce((acc, order) => acc += order.mealTypeList[selectedMealTypeIndex][1][0].count, 0)}}</div>
-                        <div class="td" v-if="selectedMealTypeIndex">{{orderList.reduce((acc, order) => acc += (order.mealTypeList[selectedMealTypeIndex][1][1] || 0).count, 0)}}</div>
-                    </div>
-                </div>
+                <div class="order-table-additional">*单元格内字母大小写对应餐品大小份</div>
             </div>
-            <div class="order-table-additional">*单元格内字母大小写对应餐品大小份</div>
-        </div>
+        </template>
+        <div v-else class="order-table-none">{{user.stationName}}没有当前日期的订单</div>
     </div>
 </template>
 
@@ -63,7 +67,7 @@ import { mapState } from "vuex"
                 selectedDate: new Date().pattern("yyyy-MM-dd"),
                 calendarStartDate: "2020-01-01",
                 calendarEndDate: "2021-01-01",
-                orderList: [],
+                hallList: [],
                 mealTypeList: ["早餐", "午餐", "晚餐"],
                 selectedMealTypeIndex: 0
 			}
@@ -99,13 +103,14 @@ import { mapState } from "vuex"
                     console.log(data)
 
                     if (!data.data) {
-                        this.orderList = []
+                        this.hallList = []
                         return
                     }
 
-                    this.orderList = data.data.filter(order => !order.mark)
+                    const hallMap = new Map()
+                    data.data.filter(order => !order.mark)
                         .sort((a, b) => (a.userId || 0) - (b.userId || 0))
-                        .map(order => {
+                        .forEach(order => {
                             const mealTypeList = []
                             for (let i = 0; i < 3; i++) {
                                 const courseTypeList = []
@@ -131,11 +136,21 @@ import { mapState } from "vuex"
                                     }
                                 }
                             }
-                            return {
+
+                            const orderObj = {
                                 ...order,
                                 mealTypeList
                             }
+                            if (!hallMap.has(order.hallId || 0)) hallMap.set(order.hallId || 0, [])
+                            hallMap.get(order.hallId || 0).push(orderObj)
                         })
+                    this.hallList = Array.from(hallMap.keys()).map(key => {
+                        return {
+                            hallName: hallMap.get(key)[0].hallName,
+                            orderList: hallMap.get(key)
+                        }
+                    })
+                    console.log(this.hallList)
                     uni.hideLoading()
                 } catch (error) {
                     console.log(error)
@@ -145,7 +160,7 @@ import { mapState } from "vuex"
                         title:'数据加载失败，请重试',
                         duration:2000,
                     })
-                    this.orderList = []
+                    this.hallList = []
                 }
             }
         },
@@ -159,6 +174,7 @@ import { mapState } from "vuex"
     .department-daily-page {
         width: 100%;
         height: auto;
+        padding-bottom: 100px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -183,8 +199,29 @@ import { mapState } from "vuex"
             }
         }
 
+        .order-table-selector {
+            text-align: center;
+            margin: 15px 0 0;
+            display: grid;
+            place-items: center stretch;
+            place-content: center stretch;
+            grid-template-columns: 1fr 1fr 1fr;
+
+            >div {
+                padding: 10px 0;
+                border-radius: 10rpx;
+                background-color: #FFFFFF;
+                color: #888888;
+            }
+
+            .selected {
+                background-color: #09BB07;
+                color: #FFFFFF;
+            }
+        }
+
         .order-table-container {
-            margin: 10px 0 50px;
+            margin: 10px 0 0;
 
             .order-table-title {
                 width: 100%;
@@ -192,27 +229,6 @@ import { mapState } from "vuex"
                 line-height: 40px;
                 font-weight: bold;
                 text-align: center;
-            }
-
-            .order-table-selector {
-                text-align: center;
-                margin: 0 0 10px;
-                display: grid;
-                place-items: center stretch;
-                place-content: center stretch;
-                grid-template-columns: 1fr 1fr 1fr;
-
-                >div {
-                    padding: 10px 0;
-                    border-radius: 10rpx;
-                    background-color: #FFFFFF;
-                    color: #888888;
-                }
-
-                .selected {
-                    background-color: #09BB07;
-                    color: #FFFFFF;
-                }
             }
             
             .order-table {
@@ -247,11 +263,18 @@ import { mapState } from "vuex"
             }
 
             .order-table-additional {
-                width: 100%;
                 margin-top: 10px;
                 font-size: 14px;
                 color: #888888;
             }
+        }
+
+        .order-table-none {
+            width: 100%;
+            margin-top: 150px;
+            text-align: center;
+            line-height: 1.5;
+            color: #888888;
         }
     }
 </style>

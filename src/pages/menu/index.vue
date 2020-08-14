@@ -1,6 +1,6 @@
 <template>
 	<div class="menu-container">
-        <div class="notification">当前工作日餐品的订餐截止时间为上个工作日的16:00</div>
+        <div class="notification">当前工作日餐品的订餐截止时间为上一日的16:00</div>
         <div class="week-date">{{weekDateStr}}</div>
         <div class="navbar">
             <div v-for="(weekday, i) in weekdayList" :key="i" class="navbar-item-container">
@@ -224,12 +224,9 @@ import { mapState } from "vuex"
                         selectedDate = new Date(nextWorkdayISODate.getTime() + nextWorkdayISODate.getTimezoneOffset() * 60 * 1000)
                     }
                 }
-                const selectedDateIndex = DateList.findIndex(day => selectedDate.pattern("yyyy-MM-dd") === day["dayStr"])
-                const lastWorkday = DateList.slice(0, selectedDateIndex).reverse().find(day => day["type"] === 0)
-                if (lastWorkday) {
-                    const lastWorkdayISODate = new Date(`${lastWorkday["dayStr"]}T16:00:00Z`)
-                    threshold = new Date(lastWorkdayISODate.getTime() + lastWorkdayISODate.getTimezoneOffset() * 60 * 1000)
-                }
+                const dateBeforeSelectedDate = new Date(selectedDate.getTime() - 1 * 24 * 60 * 60 * 1000)
+                const thresholdISODate = new Date(`${dateBeforeSelectedDate.pattern("yyyy-MM-dd")}T16:00:00Z`)
+                threshold = new Date(thresholdISODate.getTime() + thresholdISODate.getTimezoneOffset() * 60 * 1000)
             }
             this.selectedDate = selectedDate
 

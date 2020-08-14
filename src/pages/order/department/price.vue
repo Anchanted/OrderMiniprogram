@@ -15,8 +15,8 @@
             <button class="date-search-button" type="primary" @tap="onTapSearch">查询</button>
         </div>
 
-        <div class="order-table-container">
-            <div class="order-table-title">{{`${user.stationName}订餐统计`}}</div>
+        <div v-if="userList.length" class="order-table-container">
+            <div class="order-table-title">{{user.stationName}}</div>
             <div class="table order-table">
                 <div class="thead">
                     <div class="tr">
@@ -26,7 +26,7 @@
                 </div>
                 <div class="tbody">
                     <div class="tr" v-for="(user, index) in userList" :key="index">
-                        <div class="td">{{user.username}}</div>
+                        <div class="td">{{user.username}}{{user.hallName ? `（${user.hallName}）` : ""}}</div>
                         <div class="td">{{user.ncountMoney}}</div>
                     </div>
                 </div>
@@ -38,6 +38,7 @@
                 </div>
             </div>
         </div>
+        <div v-else class="order-table-none">{{user.stationName}}没有当前时段的订单结算信息</div>
     </div>
 </template>
 
@@ -92,7 +93,13 @@ import { mapState } from "vuex"
                     })
                     console.log(data)
 
-                    if (data.data) this.userList = data.data.sort((a, b) => a.userId - b.userId)
+                    if (!data.data) {
+                        this.userList = []
+                        return
+                    }
+                    
+                    this.userList = data.data.sort((a, b) => a.hallId == b.hallId ? a.userId - b.userId : a.hallId - b.hallId)
+
                     uni.hideLoading()
                 } catch (error) {
                     console.log(error)
@@ -180,6 +187,13 @@ import { mapState } from "vuex"
                     grid-template-columns: 1fr 1fr;
                 }
             }
+        }
+
+        .order-table-none {
+            margin-top: 150px;
+            text-align: center;
+            line-height: 1.5;
+            color: #888888;
         }
     }
 </style>

@@ -6,7 +6,7 @@
 				<div class="user-info">
 					<div class="user-info-name"><span>{{`${user.username} (${user.telephone})`}}</span></div>
 					<div class="user-info-secondary">{{user.roleName}}</div>
-					<div class="user-info-secondary"><span>{{user.stationName}}</span></div>
+					<div class="user-info-secondary"><span>{{user.stationName}}{{user.hallName ? `(${user.hallName})` : ""}}</span></div>
 					<div class="user-info-secondary"><span>{{user.wellName}}</span></div>
 				</div>
 			</div>

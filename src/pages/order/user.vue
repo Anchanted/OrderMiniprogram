@@ -76,12 +76,9 @@ import { mapState } from "vuex"
                                 selectedDate = new Date(nextWorkdayISODate.getTime() + nextWorkdayISODate.getTimezoneOffset() * 60 * 1000)
                             }
                         }
-                        const selectedDateIndex = DateList.findIndex(day => selectedDate.pattern("yyyy-MM-dd") === day["dayStr"])
-                        const lastWorkday = DateList.slice(0, selectedDateIndex).reverse().find(day => day["type"] === 0)
-                        if (lastWorkday) {
-                            const lastWorkdayISODate = new Date(`${lastWorkday["dayStr"]}T16:00:00Z`)
-                            threshold = new Date(lastWorkdayISODate.getTime() + lastWorkdayISODate.getTimezoneOffset() * 60 * 1000)
-                        }
+                        const dateBeforeSelectedDate = new Date(selectedDate.getTime() - 1 * 24 * 60 * 60 * 1000)
+                        const thresholdISODate = new Date(`${dateBeforeSelectedDate.pattern("yyyy-MM-dd")}T16:00:00Z`)
+                        threshold = new Date(thresholdISODate.getTime() + thresholdISODate.getTimezoneOffset() * 60 * 1000)
                     }
                     const orderISODate = new Date(`${order.date}T00:00:00Z`)
                     const orderLocalDate = new Date(orderISODate.getTime() + orderISODate.getTimezoneOffset() * 60 * 1000)
