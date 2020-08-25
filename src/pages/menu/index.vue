@@ -1,6 +1,6 @@
 <template>
 	<div class="menu-container">
-        <div class="notification">当前工作日餐品的订餐截止时间为上一日的16:00</div>
+        <div class="notification">当前工作日餐品的订餐截止时间为前一日的16:00</div>
         <div class="week-date">{{weekDateStr}}</div>
         <div class="navbar">
             <div v-for="(weekday, i) in weekdayList" :key="i" class="navbar-item-container">
@@ -129,10 +129,10 @@ import { mapState } from "vuex"
                 user: state => state.user
             }),
             hasOrder() {
-                return this.menuList.flat(4).flatMap(course => course.sizeList || []).reduce((acc, size) => acc += size.count, 0) > 0
+                return this.menuList.flat(4).flatMap(course => course.sizeList || []).reduce((acc, size) => acc + size.count, 0) > 0
             },
             weekdayOrderCount() {
-                return (i) => !this.menuList.length ? 0 : this.menuList[i].flat(4).flatMap(course => course.sizeList || []).reduce((acc, size) => acc += size.count, 0)
+                return (i) => !this.menuList.length ? 0 : this.menuList[i].flat(4).flatMap(course => course.sizeList || []).reduce((acc, size) => acc + size.count, 0)
             }
         },
 		methods: {
@@ -168,7 +168,7 @@ import { mapState } from "vuex"
             },
 
             updateOrder() {
-                this.totalPrice = this.menuList.flat(4).flatMap(course => course.sizeList || []).reduce((acc, size) => acc += size.price * size.count, 0)
+                this.totalPrice = this.menuList.flat(4).flatMap(course => course.sizeList || []).reduce((acc, size) => acc + size.price * size.count, 0)
             },
 
             onTapClear() {

@@ -45,12 +45,6 @@
 			}
 		},
 		{
-			"path": "pages/order/department/daily2",
-			"style": {
-				"navigationBarTitleText": "部门每日订餐详情2"
-			}
-		},
-		{
 			"path": "pages/order/department/price",
 			"style": {
 				"navigationBarTitleText": "部门历史订餐账单"

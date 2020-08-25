@@ -57,7 +57,7 @@ import { mapState } from "vuex"
             }),
             checkDate() {
                 return (i) => {
-                    const order = this.orderList[i]
+                    const order = this.displayList[i]
 
                     const now = new Date()
                     const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
@@ -227,14 +227,14 @@ import { mapState } from "vuex"
 <style lang="scss">
     .order-user-page {
         width: 100%;
-        height: 100%;
+        height: auto;
         display: flex;
         flex-direction: column;
         align-items: center;
 
         .order-type-select {
             width: 700rpx;
-            padding: 10px 0 0;
+            padding: 10px 0 5px;
             display: flex;
             align-items: center;
 

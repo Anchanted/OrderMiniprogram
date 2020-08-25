@@ -224,9 +224,12 @@
 
 		.tfoot {
 			.tr {
+				box-sizing: border-box;
+				border: 2rpx solid #09bb07;
+
 				border-bottom-left-radius: 10rpx;
 				border-bottom-right-radius: 10rpx;
-				
+
 				.td:first-child {
                     border-bottom-left-radius: 10rpx;
                 }

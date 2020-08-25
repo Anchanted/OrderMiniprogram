@@ -23,10 +23,6 @@
 					<span>查看部门每日订餐详情</span>
 					<span class="iconfont icon-left-arrow"></span>
 				</div>
-				<div class="option-bar" @tap="onTapDepartmentDaily2">
-					<span>查看部门每日订餐详情2</span>
-					<span class="iconfont icon-left-arrow"></span>
-				</div>
 				<div class="option-bar" @tap="onTapDepartmentOrder">
 					<span>查看部门历史订餐账单</span>
 					<span class="iconfont icon-left-arrow"></span>
@@ -68,11 +64,6 @@ import { mapState } from "vuex"
 					url: '/pages/order/department/daily'
 				});
 			},
-			onTapDepartmentDaily2() {
-				uni.navigateTo({
-					url: '/pages/order/department/daily2'
-				});
-			},
 			onTapDepartmentOrder() {
 				uni.navigateTo({
                     url: '/pages/order/department/price'
@@ -98,10 +89,12 @@ import { mapState } from "vuex"
 <style lang="scss">
 	.user-page {
 		width: 100%;
+		height: auto;
 		
 		.user-page-scroll {
 			width: 100%;
-			margin-bottom: 50px;
+			height: auto;
+			padding-bottom: 100px;
 			display: flex;
 			flex-direction: column;
 			align-items: center;

@@ -1,5 +1,5 @@
 <template>
-	<div class="department-page">
+	<div class="department-price-page">
         <div class="date-selector-container">
             <div class="date-picker-container">
                 <picker mode="date" :value="date" :start="calendarStartDate" :end="calendarEndDate" @change="bindStartDateChange">
@@ -33,7 +33,7 @@
                 <div class="tfoot">
                     <div class="tr">
                         <div class="td">总计</div>
-                        <div class="td">{{userList.reduce((acc, user) => acc += user.ncountMoney, 0)}}</div>
+                        <div class="td">{{userList.reduce((acc, user) => acc + user.ncountMoney, 0)}}</div>
                     </div>
                 </div>
             </div>
@@ -128,9 +128,9 @@ import { mapState } from "vuex"
 </script>
 
 <style lang="scss">
-    .department-page {
+    .department-price-page {
         width: 100%;
-        height: 100%;
+        height: auto;
         display: flex;
         flex-direction: column;
         align-items: center;
