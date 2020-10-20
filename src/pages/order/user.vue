@@ -56,7 +56,7 @@ import { mapState } from "vuex"
                 user: state => state.user
             }),
             checkDate() {
-                return (i) => {
+                return i => {
                     const order = this.displayList[i]
 
                     const now = new Date()

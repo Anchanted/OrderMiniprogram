@@ -25,6 +25,7 @@
             </div>
         </div>
         <image class="bottom-image" src="/static/image/loginbottom.png"></image>
+        <div class="beian">冀ICP备B2-20060069-21号</div>
     </div>
 </template>
 
@@ -283,5 +284,13 @@ export default {
         height: 300rpx;
         position: absolute;
         bottom: 0;
+    }
+
+    .beian {
+        width: 750rpx;
+        position: absolute;
+        bottom: 30px;
+        text-align: center;
+        color: #888888;
     }
 </style>
