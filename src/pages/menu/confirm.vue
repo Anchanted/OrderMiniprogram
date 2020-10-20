@@ -11,8 +11,9 @@
                 <div class="order-info-date-text"><div>{{dateObj.dateText}}</div></div>
                 <div class="order-info-date-content">
                     <div v-for="(course, j) in dateObj.courseList" :key="j" class="order-info-date-course">
+                        <!-- <span>{{course.name}} x{{course.count}}</span> -->
                         <span>{{course.name}}</span>
-                        <span>￥{{course.price}}</span>
+                        <span>￥{{course.price * course.count}}</span>
                     </div>
                 </div>
                 <div class="order-info-date-price"><span>小计：</span><span>￥{{dateObj.datePrice}}</span></div>
@@ -21,12 +22,14 @@
         <div class="total-price-container">
             <span>总计：</span><span>￥{{totalPrice}}</span>
         </div>
-        <div class="notice">*订餐确认后，当天16:00前可取消，当天16:00后不可取消</div>
+        <div class="notice">*订餐确认后，此日套餐订单可在其前一日16:00前取消，逾期无法取消</div>
         <button class="confirm-button" type="primary" @tap="onTapConfirm">确认订单</button>
     </div>
 </template>
 
 <script>
+import DateList from "@/static/json/weekday.json"
+
 import { mapState } from "vuex"
 
 	export default {
@@ -46,11 +49,36 @@ import { mapState } from "vuex"
         },
         methods: {
             onTapConfirm() {
-                const now = new Date() 
-                if (!(now.getHours() >= 8 && now.getHours() < 16)) {
+                const order = this.dateOrderList[0]
+
+                const now = new Date()
+                const todayIndex = DateList.findIndex(day => now.pattern("yyyy-MM-dd") === day["dayStr"])
+                const todayISODate = new Date(`${now.pattern("yyyy-MM-dd")}T00:00:00Z`)
+                const todayLocalDate = new Date(todayISODate.getTime() + todayISODate.getTimezoneOffset() * 60 * 1000)
+
+                let selectedDate = todayLocalDate
+                let threshold = todayLocalDate
+                if (todayIndex != null) {
+                    if (DateList[todayIndex]["type"] == 0 && now.getHours() < 8) {
+                        selectedDate = todayLocalDate
+                    } else {
+                        const nextWorkday = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
+                        if (nextWorkday) {
+                            const nextWorkdayISODate = new Date(`${nextWorkday["dayStr"]}T00:00:00Z`)
+                            selectedDate = new Date(nextWorkdayISODate.getTime() + nextWorkdayISODate.getTimezoneOffset() * 60 * 1000)
+                        }
+                    }
+                    const dateBeforeSelectedDate = new Date(selectedDate.getTime() - 1 * 24 * 60 * 60 * 1000)
+                    const thresholdISODate = new Date(`${dateBeforeSelectedDate.pattern("yyyy-MM-dd")}T16:00:00Z`)
+                    threshold = new Date(thresholdISODate.getTime() + thresholdISODate.getTimezoneOffset() * 60 * 1000)
+                }
+                const orderISODate = new Date(`${order.date.trim().replace(/[\r\n]/g, "").replace(" ", "T")}Z`)
+                const orderLocalDate = new Date(orderISODate.getTime() + orderISODate.getTimezoneOffset() * 60 * 1000)
+                
+                if (!((orderLocalDate - selectedDate >= 1 * 24 * 60 * 60 * 1000) || (orderLocalDate >= selectedDate && now < threshold))) {
                     uni.showModal({
                         title: "提示",
-                        content: "当前时间不在订餐时间范围内，请在8:00至16:00订餐",
+                        content: "此日餐品订餐时间已截止，请在预定餐品所在日的前一日16:00前提交订单",
                         showCancel: false,
                         success: function({ confirm }) {
                             if (confirm) {
@@ -136,8 +164,7 @@ import { mapState } from "vuex"
                     }).then(data => {
                         console.log(data)
                         uni.hideLoading();
-                        const result = data.data
-                        if (result) {
+                        if (data.data) {
                             uni.showToast({
                                 icon: "success",
                                 title: "订单提交成功",
@@ -162,7 +189,6 @@ import { mapState } from "vuex"
             }
         },
 		onLoad() {
-            console.log(this.globalOrderList)
             const courseList = JSON.parse(JSON.stringify(this.globalOrderList))
             courseList.sort((order1, order2) => {
                 if (order1.date === order2.date) {
@@ -184,8 +210,7 @@ import { mapState } from "vuex"
                 const sizeStr = course.size ? "(小份)" : (course.mealType > 1 ? "(大份)" : "")
                 course = {
                     ...course,
-                    name: `${mealTypeStr}餐 (套餐${courseStr}) ${sizeStr}`,
-                    price: course.mealType === 1 ? 5 : (course.size % 2 === 0 ? 15 : 14)
+                    name: `${mealTypeStr}餐 (套餐${courseStr}) ${sizeStr}`
                 }
                 if (dateMap.get(`${course.date}`) == null) dateMap.set(`${course.date}`, [])
                 dateMap.get(`${course.date}`).push(course)

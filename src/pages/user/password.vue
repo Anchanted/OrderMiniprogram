@@ -1,5 +1,7 @@
 <template>
 	<div class="change-password-page">
+        <div class="notification" v-if="notification">{{notification}}</div>
+
         <div class="input-bar-wrapper">
             <div class="input-bar-header">账号</div>
             <div class="input-bar">
@@ -33,7 +35,7 @@
             <div v-if="renewPassword !== newPassword" class="input-bar-error">两次新密码输入不一致</div>
         </div>
 
-        <div class="restriction" :style="{ color: !!newPassword.match(/^[a-zA-Z0-9]{12,20}$/g) ? '' : '#FF0000' }">新密码必须是12-20个英文字母（区分大小写）或数字</div>
+        <div class="restriction" :style="{ color: !!newPassword.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z0-9]{12,20}$/g) ? '' : '#FF0000' }">新密码必须是12-20个英文字母或数字，且至少包含一个小写字母、一个大写字母和一个数字</div>
 
         <button class="confirm-button" type="primary" @tap="onTapSubmit">提交</button>
     </div>
@@ -45,6 +47,7 @@ import { mapState } from "vuex"
 	export default {
 		data() {
 			return {
+                notification: "",
                 oldPassword: "",
                 newPassword: "",
                 renewPassword: ""
@@ -60,8 +63,8 @@ import { mapState } from "vuex"
                 let errMsg = ""
                 if (!this.oldPassword) {
                     errMsg = "未输入当前密码"
-                } else if (!this.newPassword.match(/^[a-zA-Z0-9]{12,20}$/g)) {
-                    errMsg = "新密码必须是12-20个英文字母（区分大小写）或数字"
+                } else if (!this.newPassword.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z0-9]{12,20}$/g)) {
+                    errMsg = "新密码必须是12-20个英文字母或数字，且至少包含一个小写字母、一个大写字母和一个数字"
                 } else if (this.renewPassword !== this.newPassword) {
                     errMsg = "两次新密码输入不一致"
                 } else if (this.oldPassword === this.newPassword) {
@@ -81,7 +84,7 @@ import { mapState } from "vuex"
                 uni.showLoading({
                     title: "加载中"
                 });
-                if (this.encryptPassword(this.oldPassword) !== this.user.password) {
+                if (this.oldPassword !== this.user.password) {
                     uni.hideLoading()
                     uni.showToast({
                         icon: "none",
@@ -98,11 +101,19 @@ import { mapState } from "vuex"
                         },
                         data: {
                             id: this.user.id,
-                            password: this.encryptPassword(this.newPassword)
+                            password: this.newPassword
                         }
                     }).then(data => {
                         console.log(data)
                         uni.hideLoading()
+
+                        if (!data.data) throw new Error("Error from then")
+
+                        uni.showToast({
+                            icon:'success',
+                            title:'密码修改成功',
+                            duration:2000,
+                        })
                         uni.removeStorageSync("user")
                         uni.reLaunch({
                             url:"/pages/login/index"
@@ -128,9 +139,19 @@ import { mapState } from "vuex"
                 this.renewPassword = detail.value
             },
         },
-		onLoad() {
-            
-		},
+		onLoad(option) {
+            console.log(option)
+            if (parseInt(option.change) === 1) {
+                this.notification = "您当前密码格式不符合要求，请重新修改"
+            }
+        },
+        onShow() {
+            //#ifdef MP-WEIXIN  
+			if(wx.hideHomeButton){  
+				wx.hideHomeButton();  
+			}  
+			//#endif
+        }
 	}
 </script>
 
@@ -146,6 +167,15 @@ import { mapState } from "vuex"
             margin-top: 15px;
             width: 100%;
             border-radius: 10rpx;
+        }
+
+        .notification {
+            box-sizing: border-box;
+            width: 100%;
+            margin-top: 15px;
+            padding: 0 20px;
+            font-size: 14px;
+            color: #FF0000;
         }
 
         .input-bar-wrapper {

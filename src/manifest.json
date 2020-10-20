@@ -56,7 +56,8 @@
 	"mp-weixin": { /* 微信小程序特有相关 */
 		"appid": "wx45f8d076518e4f96",
 		"setting": {
-			"urlCheck": true
+			"urlCheck": true,
+			"checkSiteMap": false
 		},
 		"usingComponents": true
 	},
