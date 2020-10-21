@@ -1,5 +1,3 @@
-import md5 from "js-md5"
-
 const mixin = {
     data() {
         return {
@@ -9,7 +7,7 @@ const mixin = {
     },
     computed: {
         nowDate() {
-            const fakeDateStr = "2020-08-04T13:"
+            const fakeDateStr = "2020-08-08T23:"
             const now = new Date()
             const fakeISODate = new Date(`${fakeDateStr}${now.pattern("mm:ss")}Z`)
             const fakeDate = new Date(fakeISODate.getTime() + fakeISODate.getTimezoneOffset() * 60 * 1000)
@@ -25,16 +23,17 @@ const mixin = {
                     data,
                     header,
                     success: (res) => {
-                        resolve(res.data);
+                        if (res.statusCode === 200) {
+                            resolve(res.data)
+                        } else {
+                            reject(res.data)
+                        }
                     },
                     fail: (err) => {
                         reject(err)
                     }
                 });
             })
-        },
-        encryptPassword(pwd) {
-            return md5(`HB${md5(pwd)}YT`)
         }
     }
 }
