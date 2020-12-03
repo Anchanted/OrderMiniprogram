@@ -23,7 +23,7 @@
             <span>总计：</span><span>￥{{totalPrice}}</span>
         </div>
         <div class="notice">*订餐确认后，此日套餐订单可在其前一日16:00前取消，逾期无法取消</div>
-        <button class="confirm-button" type="primary" @tap="onTapConfirm">确认订单</button>
+        <button class="confirm-button" type="primary" @tap="onTapConfirm" :disabled="jy" >确认订单</button>
     </div>
 </template>
 
@@ -36,6 +36,9 @@ import { mapState } from "vuex"
 		data() {
 			return {
                 dateOrderList: [],
+                jy:false,
+                number:0,
+                
 			}
         },
         computed: {
@@ -49,6 +52,7 @@ import { mapState } from "vuex"
         },
         methods: {
             onTapConfirm() {
+                this.jy = true
                 const order = this.dateOrderList[0]
 
                 const now = new Date()
@@ -59,7 +63,7 @@ import { mapState } from "vuex"
                 let selectedDate = todayLocalDate
                 let threshold = todayLocalDate
                 if (todayIndex != null) {
-                    if (DateList[todayIndex]["type"] == 0 && now.getHours() < 8) {
+                    if (DateList[todayIndex]["type"] == 0 && now.getHours() < 18) {
                         selectedDate = todayLocalDate
                     } else {
                         const nextWorkday = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)
@@ -74,6 +78,8 @@ import { mapState } from "vuex"
                 }
                 const orderISODate = new Date(`${order.date.trim().replace(/[\r\n]/g, "").replace(" ", "T")}Z`)
                 const orderLocalDate = new Date(orderISODate.getTime() + orderISODate.getTimezoneOffset() * 60 * 1000)
+
+                this.number ++
                 
                 if (!((orderLocalDate - selectedDate >= 1 * 24 * 60 * 60 * 1000) || (orderLocalDate >= selectedDate && now < threshold))) {
                     uni.showModal({
@@ -90,6 +96,8 @@ import { mapState } from "vuex"
                     })
                     return
                 }
+
+                
 
                 this.dateOrderList.forEach(async (order) => {
                     uni.showLoading({
@@ -124,6 +132,7 @@ import { mapState } from "vuex"
                                     }
                                 }
                             })
+                            this.jy = false
                             return
                         }
                     } catch (error) {
@@ -157,7 +166,9 @@ import { mapState } from "vuex"
                     uni.showLoading({
                         title: "加载中"
                     });
-                    this.request({
+
+
+                        this.request({
                         url: "/FoodData/Insert",
                         method: "GET",
                         data: courseObj,
@@ -185,6 +196,11 @@ import { mapState } from "vuex"
                             duration: 2000
                         })
                     })
+
+                    
+    
+                
+                    
                 })
             }
         },

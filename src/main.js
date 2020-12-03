@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from './App'
 import store from '@/store'
 import mixin from '@/static/js/mixin.js'
+// import preventReClick from './store/preventReClick' //防多次点击，重复提交
 
 Vue.config.productionTip = false
 Vue.mixin(mixin)
