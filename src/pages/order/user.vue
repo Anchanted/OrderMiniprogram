@@ -67,7 +67,7 @@ import { mapState } from "vuex"
                     let selectedDate = todayLocalDate
                     let threshold = todayLocalDate
                     if (todayIndex != null) {
-                        if (DateList[todayIndex]["type"] == 0 && now.getHours() < 8) {
+                        if (DateList[todayIndex]["type"] == 0 && now.getHours() < 18) {
                             selectedDate = todayLocalDate
                         } else {
                             const nextWorkday = DateList.slice(todayIndex + 1).find(day => day["type"] === 0)

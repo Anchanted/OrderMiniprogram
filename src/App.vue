@@ -1,10 +1,8 @@
 <script>
 	import allSettled from "promise.allsettled"
-
 	export default {
 		onLaunch() {
 			console.log('App Launch')
-
 			//#ifdef MP-WEIXIN  
 			if (!wx.canIUse('getUpdateManager')) {
 				wx.showModal({
@@ -13,14 +11,12 @@
 				})
 				return
 			}
-
 			const updateManager = wx.getUpdateManager()
 			const promises = [
 				new Promise(resolve => {
 					updateManager.onCheckForUpdate(res => resolve(res))
 				}) 
 			]
-
 			const user = uni.getStorageSync("user")
 			console.log(user)
 			if (user && user.username && user.password) {
@@ -44,7 +40,6 @@
 					})
 				}))
 			}
-
 			allSettled(promises).then(result => {
 				console.log(result)
 				if (result[0].value.hasUpdate) {
@@ -70,7 +65,6 @@
 				} else {
 					if (user && user.username && user.password) {
 						if (result.length === 1) return
-
 						if (result[1].status === "fulfilled") {
 							const data = result[1].value
 							console.log(data)
@@ -172,7 +166,6 @@
 
 <style lang="scss">
 	@import "./static/css/iconfont/iconfont.css";
-
     page {
         height: 100%;
 		background-color: #EFEFEF;
@@ -185,7 +178,6 @@
 			place-items: center stretch;
 			place-content: center stretch;
 		}
-
 		.th, .td {
 			// box-sizing: border-box;
 			padding: 8px 10px;
@@ -194,11 +186,9 @@
 			border: 1rpx solid #DFDFDF;
 			text-align: center;
 		}
-
 		.thead, .tbody, .tfoot {
 			width: 100%;
 		}
-
 		.thead {
 			.tr {
 				// border-top: none;
@@ -207,33 +197,25 @@
 				color: #FFFFFF;
 				border-top-left-radius: 10rpx;
 				border-top-right-radius: 10rpx;
-
 				.th:first-child {
                     border-top-left-radius: 10rpx;
                 }
-
                 .th:last-child {
                     border-top-right-radius: 10rpx;
                 }
 			}
 		}
-
 		.tbody {
-
 		}
-
 		.tfoot {
 			.tr {
 				box-sizing: border-box;
 				border: 2rpx solid #09bb07;
-
 				border-bottom-left-radius: 10rpx;
 				border-bottom-right-radius: 10rpx;
-
 				.td:first-child {
                     border-bottom-left-radius: 10rpx;
                 }
-
                 .td:last-child {
                     border-bottom-right-radius: 10rpx;
                 }
